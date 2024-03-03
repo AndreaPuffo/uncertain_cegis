@@ -5,8 +5,8 @@ This repository contains the code for the paper:
   
 ## Scope of the code
 This software framework **automatically** synthesises:  
-1. a **stabilising controller** for a desired equilibrium of a nonlinear system;  
-2. a formal verification of the closed-loop stability.
+1. a **stabilising controller** for a desired equilibrium of a linear system;  
+2. a **formal verification** of the closed-loop stability.
   
   
 ## Installation  
