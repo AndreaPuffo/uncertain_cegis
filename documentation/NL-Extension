@@ -1,0 +1,3 @@
+L'idea, esposta nelle note extension_scanned_math.pdf, è applicare CEGIS per fare bounded error identification.
+In pratica, assumendo un sistema in forma affine nel controllo e in cui le mappe sono Lipschitz, costruire un approssimazione di koopman usando cegis, aggiungendo di volta in volta i controesempi come punti di interpolazione.
+Questo consentirebbe di darci un errore di approssimazione limitato in norma da cui, nel caso, provare a tirare fuori dei risultati in stile ISS.
