@@ -1,4 +1,4 @@
-# taken from
+# model taken from
 # Systematic Synthesis of Passive Fault-Tolerant Augmented Neural
 # Lyapunov Control Laws for Nonlinear Systems
 # by Grande davide et al.
@@ -9,6 +9,9 @@ import scipy as sc
 import tqdm
 from scipy.optimize import direct, Bounds
 import matplotlib.pyplot as plt
+from code.utils import get_condition_b_constraint, get_condition_c_constraint, get_condition_a_constraint
+from LMI_tutorials.plot_ellipse_matrix_form import plot_ellipse_matrix_form
+
 
 
 # continuous time, Real{eig} < 0
@@ -61,8 +64,9 @@ def min_hurwi_eig(values, *args):
 # uncertain matrix setting
 n = 2
 m = 3
-epsi = 1.
-eta = 10.
+epsi = 0.
+eta = 0.
+sanity_check = True
 
 A = np.array([
     [- Xu/mass, 0.],
@@ -101,8 +105,12 @@ vertex_B = [B_avg1, B_avg2, B_avg3, B_min1, B_min2, B_min3, B_max]
 ######################
 
 found_lyap = False
+domain_ellipse = np.eye(n) * 0.01
+sampled_A = [A]
 sampled_B = [B_avg1, B_avg2, B_avg3]
 iteration = 0
+fig, ax = plt.subplots(1, 1)
+colors = ['b', 'g', 'c', 'y', 'tab:orange', 'r', 'm']
 
 while not found_lyap:
     print('-'*80)
@@ -110,25 +118,48 @@ while not found_lyap:
     print('-' * 80)
     iteration += 1
 
-    P = cp.Variable((n,n), symmetric=True)
-    W = cp.Variable((m,n))
+    # inv_ellipse_P = np.linalg.inv(Ellipse_P)
+    # Q = rho * inv_ellipse_P
+    Q = cp.Variable((n, n), symmetric=True)
+    # H = cp.Variable((m,n))
+    # G = H @ Q
+    G = cp.Variable((m, n))
+    # Y is the new K
+    Y = cp.Variable((m, n))
 
-    uncertain_constraints = []
-    for idx in range(len(sampled_B)):
-        M = P @ A.T + A @ P + W.T @ sampled_B[idx].T + sampled_B[idx] @ W
-        uncertain_constraints += [M << -epsi * np.eye(n)]
+    ### saturation constraints
 
-    uncertain_constraints += [P << eta*np.eye(n), P>>0.]
+    # impose ellipse at least contains a ball (domain ellipse)
+    gamma_ellipse = cp.Variable((1, 1))
+    a = get_condition_a_constraint(gamma=gamma_ellipse, domain_ellipse=domain_ellipse, Q=Q)
+
+    # impose the stability constraints
+    bs = []
+    for A_mat in sampled_A:
+        for B_mat in sampled_B:
+            bs += get_condition_b_constraint(A_mat, B_mat, Q, G, Y, eta=eta)
+
+    # impose the constraints that the lyapunov ellipse is within L(H)
+    c = get_condition_c_constraint(G, Q)
+
+    uncertain_constraints = a + bs + c + [Q >> epsi * np.eye(n)]
 
     prob = cp.Problem(cp.Minimize(0.), uncertain_constraints)
     prob.solve()
 
-    if P.value is None:
+    if Q.value is None:
         print('Optimisation failed!')
         exit()
 
-    P_star, W_star = P.value, W.value
-    K = W_star @ np.linalg.inv(P_star)
+    # recover values
+    # ellipse:
+    Q = Q.value
+    P_ellipse = np.linalg.inv(Q)
+    K = Y.value @ P_ellipse
+
+    plot_ellipse_matrix_form(P_ellipse, ax=ax, edgecolor=colors[(iteration - 1) % len(colors)], label=iteration)
+
+    print(f'Ellipse/Lyapunov P: {P_ellipse}')
     print(f'Candidate K: {K}')
 
     # find a cex
@@ -137,10 +168,10 @@ while not found_lyap:
     ub_ab = [1., 1., 1.]
     bounds = Bounds(lb_ab, ub_ab)
 
-    res = direct(min_hurwi_eig, bounds=bounds, args=(A, P_star, K))
+    res = direct(min_hurwi_eig, bounds=bounds, args=(A, Q, K))
     print(f'Max eigenvalue of variable lyapunov matrix: {-res.fun}')
     B1_found, B2_found, B3_found = build_B1(res.x[0]), build_B2(res.x[1]), build_B3(res.x[2])
-    print(f'Max eigenvalue of closed loop matrix with lyapunov (direct): '
+    print(f'Max eigenvalue of hurwitz lyapunov (direct): '
           f'{np.max(np.linalg.eigvals(A + B1_found @ K))}, {np.max(np.linalg.eigvals(A + B2_found @ K))}, '
           f'{np.max(np.linalg.eigvals(A + B3_found @ K))}')
     # B_found_vtx = closest_vertex(res.x, lb_ab, ub_ab)
@@ -169,19 +200,24 @@ while not found_lyap:
         print(f'Max closed loop eigenvalue of vertices polytope: {max_eig}')
 
         max_eig = -np.inf
-        for idx in tqdm.tqdm(range(10000)):
-            # generate random matrix
-            B1_found, B2_found, B3_found = build_B1(np.random.uniform()), build_B2(np.random.uniform()), build_B3(np.random.uniform())
-            Bs = [B1_found, B2_found, B3_found]
-            for jdx in range(3):
-                cl = A + Bs[jdx] @ K
-                # print(np.linalg.eigvals(cl))
-                if np.max(np.linalg.eigvals(cl).real) > max_eig:
-                    max_eig = np.max(np.linalg.eigvals(cl))
+        if sanity_check:
+            print(' --- Sanity check --- ')
+            for idx in tqdm.tqdm(range(10000)):
+                # generate random matrix
+                B1_found, B2_found, B3_found = build_B1(np.random.uniform()), build_B2(np.random.uniform()), build_B3(np.random.uniform())
+                Bs = [B1_found, B2_found, B3_found]
+                for jdx in range(3):
+                    cl = A + Bs[jdx] @ K
+                    # print(np.linalg.eigvals(cl))
+                    if np.max(np.linalg.eigvals(cl).real) > max_eig:
+                        max_eig = np.max(np.linalg.eigvals(cl))
 
-                if not all(np.linalg.eigvals(cl).real < 0.):
-                    print(f'Found eig > 0 with couple: {A}, {Bs[jdx]}')
+                    if not all(np.linalg.eigvals(cl).real < 0.):
+                        print(f'Found eig > 0 with couple: {A}, {Bs[jdx]}')
 
-        print(f'Max closed loop eigenvalue of vertices polytope: {max_eig}')
+            print(f'Max closed loop eigenvalue of vertices polytope: {max_eig}')
 
 
+plt.legend()
+plt.grid()
+plt.show()
