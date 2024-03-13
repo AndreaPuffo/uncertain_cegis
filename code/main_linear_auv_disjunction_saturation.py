@@ -9,8 +9,8 @@ import scipy as sc
 import tqdm
 from scipy.optimize import direct, Bounds
 import matplotlib.pyplot as plt
-from code.utils import get_condition_b_constraint, get_condition_c_constraint, get_condition_a_constraint
-from LMI_tutorials.plot_ellipse_matrix_form import plot_ellipse_matrix_form
+from utils import get_condition_b_constraint, get_condition_c_constraint, get_condition_a_constraint
+from plot_ellipse_matrix_form import plot_ellipse_matrix_form
 
 
 

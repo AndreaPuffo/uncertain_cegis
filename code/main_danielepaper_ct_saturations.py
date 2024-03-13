@@ -7,9 +7,9 @@ import numpy as np
 import tqdm
 from scipy.optimize import direct, Bounds
 import matplotlib.pyplot as plt
-from code.utils import (get_condition_a_constraint, get_condition_b_constraint, get_condition_c_constraint,
+from utils import (get_condition_a_constraint, get_condition_b_constraint, get_condition_c_constraint,
                         min_hurwitz_eig, min_closedloop_eig)
-from LMI_tutorials.plot_ellipse_matrix_form import plot_ellipse_matrix_form
+from plot_ellipse_matrix_form import plot_ellipse_matrix_form
 
 
 def min_hurwi_eig_from_values(values, *args):
