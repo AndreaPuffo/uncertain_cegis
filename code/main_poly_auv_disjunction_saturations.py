@@ -1,7 +1,14 @@
-# taken from
-# Systematic Synthesis of Passive Fault-Tolerant Augmented Neural
-# Lyapunov Control Laws for Nonlinear Systems
-# by Grande davide et al.
+"""
+This example is taken from:
+"Systematic Synthesis of Passive Fault-Tolerant Augmented Neural 
+Lyapunov Control Laws for Nonlinear Systems"
+Grande and Fenucci and Peruffo and Anderlini and Phillips and Thomas and Salavasidis,
+2023 62nd IEEE Conference on Decision and Control (CDC). IEEE, 2023
+
+@authors: Andrea Peruffo
+
+"""
+
 
 import cvxpy as cp
 import numpy as np
