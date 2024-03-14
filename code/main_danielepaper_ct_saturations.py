@@ -195,6 +195,7 @@ while not found_lyap:
     ub_ab = np.hstack([A_max.reshape(1, -1)[0], B_max.reshape(1, -1)[0]])
     bounds = Bounds(lb_ab, ub_ab)
 
+    # NOTA: this check is also just a sanity check
     res = direct(min_cloop_eig_from_values, bounds=bounds, args=(None, K), eps=1.)
     A_found = res.x[:4 * 4].reshape(4, 4)
     B_found = res.x[4 * 4:].reshape(4, 1)
@@ -204,6 +205,7 @@ while not found_lyap:
     print(f'Max eigenvalue of closed loop matrix (Closest Vtx): '
           f'{np.max(np.linalg.eigvals(A_found_vtx + B_found_vtx @ K))}')
 
+    # NOTA: this check is the correct verification call, looking for the AP + PA + BW + WB matrix
     res = direct(min_hurwi_eig_from_values, bounds=bounds, args=(Q, K))
     print(f'Max eigenvalue of hurwitz lyapunov matrix: {-res.fun}')
     A_found = res.x[:4 * 4].reshape(4, 4)

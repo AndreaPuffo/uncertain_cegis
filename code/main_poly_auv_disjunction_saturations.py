@@ -8,6 +8,8 @@ import numpy as np
 import scipy as sc
 import tqdm
 from scipy.optimize import direct, Bounds
+from utils import get_condition_b_constraint, get_condition_c_constraint, get_condition_a_constraint
+from plot_ellipse_matrix_form import plot_ellipse_matrix_form
 import matplotlib.pyplot as plt
 
 
@@ -84,26 +86,6 @@ def build_B3(health):
          (-np.sin(alpha2) * l2y + np.cos(alpha2) * l2x) / J,
          health * (-np.sin(alpha3) * l3y + np.cos(alpha3) * l3x) / J]
     ])
-
-def min_hurwi_eig(values, *args):
-    # build matrix B
-    values_a = values[:2]
-    values_b = values[2:]
-    A = build_A(values_a)
-    # build matrix B
-    B1 = build_B1(values_b[0])
-    B2 = build_B2(values_b[1])
-    B3 = build_B3(values_b[2])
-    P, K = args
-    # we want (A+BK)P + P(A+BK)^T to have eigs < 0, but change sign for Minimization
-    iota = 0.
-    hurwi1 = - (A + B1 @ K) @ P - P @ (A + B1 @ K).T - iota * np.eye(A.shape[0])
-    hurwi2 = - (A + B2 @ K) @ P - P @ (A + B2 @ K).T - iota * np.eye(A.shape[0])
-    hurwi3 = - (A + B3 @ K) @ P - P @ (A + B3 @ K).T - iota * np.eye(A.shape[0])
-    return np.min([
-        np.min(sc.linalg.eigvals(hurwi1).real),
-        np.min(sc.linalg.eigvals(hurwi2).real),
-        np.min(sc.linalg.eigvals(hurwi3).real)])
 
 def min_hurwi_eig_single(values, *args):
     # build matrices A, B
@@ -205,10 +187,10 @@ def closest_vertex_single(values, lb, ub, index):
 # uncertain matrix setting
 n = 2
 m = 3
-epsi = 1e-3
-eta = 10.
+epsi = 1e-6
+eta = 1e-3
 
-domain = [-10., 10.]
+domain = [-1., 1.]
 
 A_max = np.array([
                 [(-Xu - 2*Xuu * domain[1]) / mass, 0.],
@@ -258,36 +240,65 @@ vertex_B = [B_avg1, B_avg2, B_avg3, B_min1, B_min2, B_min3, B_max]
 ######################
 
 found_lyap = False
+sanity_check = True  # if you dont need the sanity check, set to False
 sampled_A = [A_avg]
 sampled_B = [[B_avg1, B_avg2, B_avg3]]
 iteration = 0
+domain_ellipse = np.eye(n) * 0.01
+fig, ax = plt.subplots(1, 1)
+colors = ['b', 'g', 'c', 'y', 'tab:orange', 'r', 'm']
 
+
+# should converge in 5 iterations
 while not found_lyap:
     print('-'*80)
     print(f'Iteration {iteration}')
     print('-' * 80)
     iteration += 1
 
-    P = cp.Variable((n,n), symmetric=True)
-    W = cp.Variable((m,n))
+    # inv_ellipse_P = np.linalg.inv(Ellipse_P)
+    # Q = rho * inv_ellipse_P
+    Q = cp.Variable((n, n), symmetric=True)
+    # H = cp.Variable((m,n))
+    # G = H @ Q
+    G = cp.Variable((m, n))
+    # Y is the new K
+    Y = cp.Variable((m, n))
 
-    uncertain_constraints = []
-    for idx in range(len(sampled_A)):
-        for jdx in range(len(sampled_B[idx])):
-            M = P @ sampled_A[idx].T + sampled_A[idx] @ P + W.T @ sampled_B[idx][jdx].T + sampled_B[idx][jdx] @ W
-            uncertain_constraints += [M << -epsi * np.eye(n)]
+    ### saturation constraints
 
-    uncertain_constraints += [P << eta*np.eye(n), P>>0.]
+    # impose ellipse at least contains a ball (domain ellipse)
+    gamma_ellipse = cp.Variable((1, 1))
+    a = get_condition_a_constraint(gamma=gamma_ellipse, domain_ellipse=domain_ellipse, Q=Q)
+
+    # impose the stability constraints
+    bs = []
+    for A_mat in sampled_A:
+        for Bs in sampled_B:
+            for B_mat in Bs:
+                bs += get_condition_b_constraint(A_mat, B_mat, Q, G, Y, eta=eta)
+
+    # impose the constraints that the lyapunov ellipse is within L(H)
+    c = get_condition_c_constraint(G, Q)
+
+    uncertain_constraints = a + bs + c + [Q >> epsi * np.eye(n)]
 
     prob = cp.Problem(cp.Minimize(0.), uncertain_constraints)
     prob.solve()
 
-    if P.value is None:
+    if Q.value is None:
         print('Optimisation failed!')
         exit()
 
-    P_star, W_star = P.value, W.value
-    K = W_star @ np.linalg.inv(P_star)
+    # recover values
+    # ellipse:
+    Q = Q.value
+    P_ellipse = np.linalg.inv(Q)
+    K = Y.value @ P_ellipse
+
+    plot_ellipse_matrix_form(P_ellipse, ax=ax, edgecolor=colors[(iteration - 1) % len(colors)], label=iteration)
+
+    print(f'Ellipse/Lyapunov P: {P_ellipse}')
     print(f'Candidate K: {K}')
 
     # find a cex
@@ -297,7 +308,7 @@ while not found_lyap:
     bounds = Bounds(lb_ab, ub_ab)
 
     # NOTA: this check is also just a sanity check
-    res = direct(min_cloop_eig, bounds=bounds, args=(P_star, K), eps=1.)
+    res = direct(min_cloop_eig, bounds=bounds, args=(P_ellipse, K), eps=1.)
     print(f'Max eigenvalue of variable closed loop matrix: {-res.fun}')
     A_found, Bs_found = closest_vertex(res.x, lb_ab, ub_ab)
     print(f'Max eigenvalue of closed loop matrix (vertex): '
@@ -310,14 +321,14 @@ while not found_lyap:
     # should be the same, just better looking
     max_eig_so_far = -np.inf
     for idx_b_mat in range(3):
-        res = direct(min_hurwi_eig_single, bounds=Bounds(lb_ab[:3], ub_ab[:3]), args=(idx_b_mat+1, P_star, K), eps=1.)
-        print(f'Max eigenvalue of variable lyapunov matrix: {-res.fun}')
-        A_found, B_found = closest_vertex_single(res.x, lb_ab[:3], ub_ab[:3], idx_b_mat+1)
+        res = direct(min_hurwi_eig_single, bounds=Bounds(lb_ab[:3], ub_ab[:3]), args=(idx_b_mat + 1, P_ellipse, K), eps=1.)
+        print(f'Max eigenvalue of hurwitz lyapunov matrix: {-res.fun}')
+        A_found, B_found = closest_vertex_single(res.x, lb_ab[:3], ub_ab[:3], idx_b_mat + 1)
         print(f'Max eigenvalue of closed loop matrix -- found with hurwitz (vertex): '
               f'{np.max(np.linalg.eigvals(A_found + B_found @ K))}')
         if np.max(np.linalg.eigvals(A_found + B_found @ K)) > max_eig_so_far:
             max_eig_so_far = np.max(np.linalg.eigvals(A_found + B_found @ K))
-            max_eig_index = idx_b_mat+1
+            max_eig_index = idx_b_mat + 1
             max_res = res
 
     if max_res.fun <= 0:
@@ -346,23 +357,27 @@ while not found_lyap:
 
         print('Checking random generated matrices...')
         max_eig = -np.inf
-        for idx in tqdm.tqdm(range(500000)):
-            # generate random matrix
-            A_rnd = build_A(
-                [np.random.uniform(low=domain[0], high=domain[1]), np.random.uniform(low=domain[0], high=domain[1])]
-            )
-            B1_found, B2_found, B3_found = (build_B1(np.random.uniform()),
-                                            build_B2(np.random.uniform()), build_B3(np.random.uniform()))
-            Bs = [B1_found, B2_found, B3_found]
-            for jdx in range(m):
-                cl = A_rnd + Bs[jdx] @ K
-                # print(np.linalg.eigvals(cl))
-                if np.max(np.linalg.eigvals(cl).real) > max_eig:
-                    max_eig = np.max(np.linalg.eigvals(cl))
+        if sanity_check:
+            for idx in tqdm.tqdm(range(500000)):
+                # generate random matrix
+                A_rnd = build_A(
+                    [np.random.uniform(low=domain[0], high=domain[1]), np.random.uniform(low=domain[0], high=domain[1])]
+                )
+                B1_found, B2_found, B3_found = (build_B1(np.random.uniform()),
+                                                build_B2(np.random.uniform()), build_B3(np.random.uniform()))
+                Bs = [B1_found, B2_found, B3_found]
+                for jdx in range(m):
+                    cl = A_rnd + Bs[jdx] @ K
+                    # print(np.linalg.eigvals(cl))
+                    if np.max(np.linalg.eigvals(cl).real) > max_eig:
+                        max_eig = np.max(np.linalg.eigvals(cl))
 
-                if not all(np.linalg.eigvals(cl).real < 0.):
-                    print(f'Found eig > 0 with couple: {A_rnd}, {Bs[jdx]}')
+                    if not all(np.linalg.eigvals(cl).real < 0.):
+                        print(f'Found eig > 0 with couple: {A_rnd}, {Bs[jdx]}')
 
-        print(f'Max closed loop eigenvalue of random matrices: {max_eig}')
+            print(f'Max closed loop eigenvalue of random matrices: {max_eig}')
 
 
+plt.legend()
+plt.grid()
+plt.show()

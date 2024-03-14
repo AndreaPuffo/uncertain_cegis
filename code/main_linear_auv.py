@@ -159,6 +159,7 @@ while not found_lyap:
     ub_ab = [float(m)]
     bounds = Bounds(lb_ab, ub_ab)
 
+    # NOTA: this check is also just a sanity check
     res = direct(min_cloop_eig, bounds=bounds, args=(A, P_star, K))
     B_found = build_B(res.x[0])
     print(f'Max eigenvalue of closed loop matrix (direct): {np.max(np.linalg.eigvals(A + B_found @ K))}')
@@ -166,6 +167,7 @@ while not found_lyap:
     print(
         f'Max eigenvalue of closed loop matrix (vertex): {np.max(np.linalg.eigvals(A + B_found_vtx @ K))}')
 
+    # NOTA: this check is the correct verification call
     res = direct(min_hurwi_eig, bounds=bounds, args=(A, P_star, K))
     print(f'Max eigenvalue of variable lyapunov matrix: {-res.fun}')
     B_found = build_B(res.x[0])
