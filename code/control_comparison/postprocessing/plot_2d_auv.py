@@ -64,7 +64,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -80,7 +80,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -94,7 +94,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -109,7 +109,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -132,7 +132,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -156,7 +156,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -180,7 +180,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -196,7 +196,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -213,7 +213,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -229,7 +229,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -246,7 +246,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -263,7 +263,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -288,7 +288,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -308,7 +308,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
         
@@ -325,7 +325,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -345,7 +345,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -362,7 +362,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -379,7 +379,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -396,7 +396,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -416,7 +416,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
 
@@ -428,7 +428,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
                      max_V, facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
         
@@ -441,7 +441,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
                      max_V[:int(samples_number/t_short)], facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
     
@@ -454,7 +454,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
                      max_V[:int(samples_number/t_short)], facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
     
@@ -475,7 +475,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -492,7 +492,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -511,7 +511,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -530,7 +530,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -552,7 +552,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -570,7 +570,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -601,7 +601,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Surge speed [m/s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
     
@@ -625,7 +625,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Surge speed [m/s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -650,7 +650,7 @@ def plot(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Surge speed [m/s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -752,7 +752,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -777,7 +777,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
     
@@ -792,7 +792,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -806,7 +806,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -821,7 +821,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
         plt.close(fig)
 
@@ -837,7 +837,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -853,7 +853,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -869,7 +869,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -886,7 +886,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -903,7 +903,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -920,7 +920,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -938,7 +938,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -956,7 +956,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -974,7 +974,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -992,7 +992,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1004,7 +1004,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
                      max_V, facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
         
@@ -1017,7 +1017,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
                      max_V[:int(samples_number/t_short)], facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
     
@@ -1030,7 +1030,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
                      max_V[:int(samples_number/t_short)], facecolor='blue', alpha=0.5, interpolate=True)
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_v, dpi=dpi_)
     plt.close(fig)
     
@@ -1073,7 +1073,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1095,7 +1095,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1117,7 +1117,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1131,7 +1131,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1143,7 +1143,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1157,7 +1157,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1178,7 +1178,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1197,7 +1197,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -1221,7 +1221,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -1242,7 +1242,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -1261,7 +1261,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1287,7 +1287,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1305,7 +1305,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1326,7 +1326,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)     
     
@@ -1377,7 +1377,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1394,7 +1394,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
     plt.yscale("log")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1407,7 +1407,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1424,7 +1424,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
     plt.yscale("log")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1438,7 +1438,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1456,7 +1456,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
     plt.yscale("log")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1479,7 +1479,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
               
@@ -1501,7 +1501,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)       
         
@@ -1522,10 +1522,197 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
+
+
+def plot_comparison_three_ctrl(x_axis_scale, 
+                    dynamic_fault_test, c1, c2, x_single, u_single, c3, act_faulty_test,
+                    des_x1, des_x2, 
+                    plot_saturation,  saturation_value,
+                    samples_number, 
+                    x_all_lqr, u_all_lqr,
+                    dpi_, final_dir_):  # run_statistics
+    
+    # This function plots one pFT-ANLC controller,  
+    # one state-space controller, and one state-space controller
+     
+    
+    # Controller state-space 1
+    x1_single_K1 = x_all_lqr[0][:,0].copy()
+    x2_single_K1 = x_all_lqr[0][:,1].copy()
+    u1_single_K1 = u_all_lqr[0][:,0].copy()
+    u2_single_K1 = u_all_lqr[0][:,1].copy()
+    u3_single_K1 = u_all_lqr[0][:,2].copy()
+      
+    # Controller state-space 2
+    x1_single_K2 = x_all_lqr[1][:,0].copy()
+    x2_single_K2 = x_all_lqr[1][:,1].copy()
+    u1_single_K2 = u_all_lqr[1][:,0].copy()
+    u2_single_K2 = u_all_lqr[1][:,1].copy()
+    u3_single_K2 = u_all_lqr[1][:,2].copy()
+
+
+    # Controller state-space -- single tuning
+    x1_single = x_single[0][:,0].copy()
+    x2_single = x_single[0][:,1].copy()
+    u1_single = u_single[0][:,0].copy()
+    u2_single = u_single[0][:,1].copy()
+    u3_single = u_single[0][:,2].copy() 
+
+
+    # FORCE 1
+    title_fig_c = "comp_Control_input_forces_bounds_F1.png"
+    fig = plt.figure()
+    plt.plot(x_axis_scale, u1_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u1_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K2
+    plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+    # FORCE 1 -- log scale
+    title_fig_c = "comp_Control_input_forces_bounds_F1_log.png"
+    fig = plt.figure()
+    plt.plot(x_axis_scale, u1_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u1_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+    plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    if plot_saturation:
+        plt.plot(x_axis_scale, u1_single_K1*0 + saturation_value, 
+                 '--r', linewidth=1.5, alpha=0.7, label="control saturation")  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.yscale("log")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+    # FORCE 2
+    title_fig_c = "comp_Control_input_forces_bounds_F2.png"
+    fig = plt.figure()
+    plt.plot(x_axis_scale, u2_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u2_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+    plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+    # FORCE 2 -- log scale
+    title_fig_c = "comp_Control_input_forces_bounds_F2_log.png"
+    fig = plt.figure()
+    plt.plot(x_axis_scale, u2_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u2_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+    plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    if plot_saturation:
+        plt.plot(x_axis_scale, u2_single_K1*0 + saturation_value, 
+                 '--r', linewidth=2.5, alpha=0.7, label="control saturation")  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.yscale("log")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+
+    # FORCE 3
+    title_fig_c = "comp_Control_input_forces_bounds_F3.png"
+    fig = plt.figure()
+    plt.plot(x_axis_scale, u3_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u3_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+    plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+    # FORCE 3 -- log scale
+    title_fig_c = "comp_Control_input_forces_bounds_F3_log.png"
+    fig = plt.figure()
+
+    plt.plot(x_axis_scale, u3_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
+    plt.plot(x_axis_scale, u3_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+    plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+    if plot_saturation:
+        plt.plot(x_axis_scale, u3_single_K1*0 + saturation_value, 
+                 '--r', linewidth=2.5, alpha=0.7, label="control saturation")  # single controller
+    plt.legend(loc='best')
+    plt.xlabel("Time [s]")
+    plt.ylabel("Force [N]")
+    plt.yscale("log")
+    plt.grid(color='lightgray',linestyle='--')
+    plt.savefig(final_dir_ + title_fig_c, dpi=dpi_)
+    plt.close(fig)
+
+    if dynamic_fault_test:
+
+        title_fig_ref = "comp_Reference_dynamics_x1_bounds_short.png"
+        fig = plt.figure()
+        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single_K1[int(samples_number/2-0.1*samples_number):]*0 + des_x1, '--g', label='$x_1^\star$')  # reference
+        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single_K1[int(samples_number/2-0.1*samples_number):], 
+                 'blue', linewidth=2.5, alpha=0.7, label=c1) 
+        
+        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single_K2[int(samples_number/2-0.1*samples_number):], 
+                 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+        
+        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single[int(samples_number/2-0.1*samples_number):], 
+                 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+
+        plt.xlabel("Time [s]")
+        plt.ylabel("Surge speed [m/s]")
+        plt.legend(loc='best')
+        plt.grid(color='lightgray',linestyle='--')
+        plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
+        plt.close(fig)
+              
+
+        title_fig_ref = "v3_comp_Reference_dynamics_x1_bounds_v2.png"
+        fig = plt.figure()
+        plt.plot(x_axis_scale, x1_single_K1*0 + des_x1, '--g', label='$x_1^\star$')  # reference
+        plt.plot(x_axis_scale, x1_single_K1, 
+                 'blue', linewidth=2.5, alpha=0.7, label=c1) 
+        plt.plot(x_axis_scale, x1_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+
+        plt.plot(x_axis_scale, x1_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+
+        fault_location_y = x1_single_K1[int(samples_number/2)]*0 + des_x1
+        plt.scatter(x_axis_scale[int(samples_number/2)], fault_location_y, s=100, c='red', label='$F_{%s}$ - fault injected' %act_faulty_test)
+        plt.xlabel("Time [s]")
+        plt.ylabel("Surge speed [m/s]")
+        plt.legend(loc='lower right')
+        plt.grid(color='lightgray',linestyle='--')
+        plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
+        plt.close(fig)       
+        
+        
+        # Dynamics 2
+        title_fig_ref = "v3_comp_Reference_dynamics_x2_bounds_v2.png"
+        fig, ax = plt.subplots()
+        plt.plot(x_axis_scale, x2_single_K1*0 + des_x2, '--g', label='$x_2^\star$')  # reference
+        plt.plot(x_axis_scale, x2_single_K1, 'blue', linewidth=2.5, alpha=0.7, label=c1)
+        plt.plot(x_axis_scale, x2_single_K2, 'purple', linewidth=2.5, alpha=0.7, label=c2)  # single controller K1
+        plt.plot(x_axis_scale, x2_single, 'orange', linewidth=2.5, alpha=0.7, label=c3)  # single controller
+
+        fault_location_y = x2_single_K1[int(samples_number/2)]*0 + des_x2
+        plt.scatter(x_axis_scale[int(samples_number/2)], fault_location_y, s=100, c='red', label='$F_{%s}$ - fault injected' %act_faulty_test)
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+        plt.xlabel("Time [s]")
+        plt.ylabel("Angular speed [rad/s]")
+        plt.legend(loc='best')
+        plt.grid(color='lightgray',linestyle='--')
+        plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
+        plt.close(fig)
 
 
 def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale, 
@@ -1612,7 +1799,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -1640,7 +1827,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
         plt.close(fig)
     
@@ -1661,7 +1848,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
     
@@ -1681,7 +1868,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -1696,7 +1883,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.legend(loc='best')
         plt.xlabel("Time [s]")
         plt.ylabel("Force [N]")
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
         plt.close(fig)
 
@@ -1715,7 +1902,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1733,7 +1920,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1750,7 +1937,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1769,7 +1956,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1788,7 +1975,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1806,7 +1993,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1825,7 +2012,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1844,7 +2031,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Angular speed [rad/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -1864,7 +2051,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1884,7 +2071,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -1898,7 +2085,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel(None)
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_v, dpi=dpi_)
     plt.close(fig)
         
@@ -1913,7 +2100,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
              V_best[:int(samples_number/t_short)], ls=':', color='blue', label='$\overline{V}$')
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.legend(loc='best')
     plt.savefig(final_dir_comp + title_fig_v, dpi=dpi_)
     plt.close(fig)
@@ -1929,7 +2116,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
              V_best[:int(samples_number/t_short)], ls=':', color='blue', label='$\overline{V}$')
     plt.xlabel("Time [s]")
     plt.ylabel(None)
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.legend(loc='best')
     plt.savefig(final_dir_comp + title_fig_v, dpi=dpi_)
     plt.close(fig)
@@ -1973,7 +2160,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='lower right')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
     
@@ -1998,7 +2185,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -2021,7 +2208,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.xlabel("Time [s]")
     plt.ylabel("Surge speed [m/s]")
     plt.legend(loc='best')
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
     plt.close(fig)
 
@@ -2036,7 +2223,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -2049,7 +2236,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -2063,7 +2250,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
-    plt.grid()
+    plt.grid(color='lightgray',linestyle='--')
     plt.savefig(final_dir_comp + title_fig_c, dpi=dpi_)
     plt.close(fig)
 
@@ -2086,7 +2273,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -2106,7 +2293,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -2131,7 +2318,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='lower right')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -2152,7 +2339,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -2172,7 +2359,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -2199,7 +2386,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
         
@@ -2218,7 +2405,7 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
 
@@ -2239,6 +2426,6 @@ def plot_comparison_best_c(x_all, u_all, V_all, x_axis_scale,
         plt.xlabel("Time [s]")
         plt.ylabel("Angular speed [rad/s]")
         plt.legend(loc='best')
-        plt.grid()
+        plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_comp + title_fig_ref, dpi=dpi_)
         plt.close(fig)
