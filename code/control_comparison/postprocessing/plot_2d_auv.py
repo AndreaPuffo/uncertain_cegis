@@ -1332,7 +1332,7 @@ def plot_comparison(x_all, u_all, V_all, x_axis_scale,
     
 
 def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale, 
-                    dynamic_fault_test, c1, c6, x_single, u_single, c7, act_faulty_test,
+                    dynamic_fault_test, c1, c6, x_single, u_single, c7, plot_c6, plot_c7, act_faulty_test,
                     des_x1, des_x2, init_x1, init_x2, gamma_underbar, 
                     plot_saturation,  saturation_value,
                     samples_number, ann_files, 
@@ -1372,8 +1372,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     title_fig_c = "comp_Control_input_forces_bounds_F1.png"
     fig = plt.figure()
     plt.plot(x_axis_scale, u1_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
@@ -1385,8 +1387,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     title_fig_c = "comp_Control_input_forces_bounds_F1_log.png"
     fig = plt.figure()
     plt.plot(x_axis_scale, u1_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     if plot_saturation:
         plt.plot(x_axis_scale, u1_pftanlc*0 + saturation_value, 
                  '--r', linewidth=1.5, alpha=0.7, label="control saturation")  # single controller
@@ -1402,8 +1406,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     title_fig_c = "comp_Control_input_forces_bounds_F2.png"
     fig = plt.figure()
     plt.plot(x_axis_scale, u2_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
@@ -1415,8 +1421,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     title_fig_c = "comp_Control_input_forces_bounds_F2_log.png"
     fig = plt.figure()
     plt.plot(x_axis_scale, u2_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     if plot_saturation:
         plt.plot(x_axis_scale, u2_pftanlc*0 + saturation_value, 
                  '--r', linewidth=2.5, alpha=0.7, label="control saturation")  # single controller
@@ -1433,8 +1441,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     title_fig_c = "comp_Control_input_forces_bounds_F3.png"
     fig = plt.figure()
     plt.plot(x_axis_scale, u3_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u3_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u3_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     plt.legend(loc='best')
     plt.xlabel("Time [s]")
     plt.ylabel("Force [N]")
@@ -1447,8 +1457,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
     fig = plt.figure()
 
     plt.plot(x_axis_scale, u3_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)  # single controller K1
-    plt.plot(x_axis_scale, u3_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-    plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+    if plot_c6:
+        plt.plot(x_axis_scale, u3_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+    if plot_c7:
+        plt.plot(x_axis_scale, u3_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
     if plot_saturation:
         plt.plot(x_axis_scale, u3_pftanlc*0 + saturation_value, 
                  '--r', linewidth=2.5, alpha=0.7, label="control saturation")  # single controller
@@ -1467,11 +1479,12 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_pftanlc[int(samples_number/2-0.1*samples_number):]*0 + des_x1, '--g', label='$x_1^\star$')  # reference
         plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_pftanlc[int(samples_number/2-0.1*samples_number):], 
                  'blue', linewidth=2.5, alpha=0.7, label=c1) 
-        
-        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single_K1[int(samples_number/2-0.1*samples_number):], 
+        if plot_c6:
+            plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single_K1[int(samples_number/2-0.1*samples_number):], 
                  'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
         
-        plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single[int(samples_number/2-0.1*samples_number):], 
+        if plot_c7:
+            plt.plot(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_single[int(samples_number/2-0.1*samples_number):], 
                  'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
 
         plt.fill_between(x_axis_scale[int(samples_number/2-0.1*samples_number):], x1_pftanlc[int(samples_number/2-0.1*samples_number):]*0 + des_x1+gamma_underbar, 
@@ -1489,9 +1502,11 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.plot(x_axis_scale, x1_pftanlc*0 + des_x1, '--g', label='$x_1^\star$')  # reference
         plt.plot(x_axis_scale, x1_pftanlc, 
                  'blue', linewidth=2.5, alpha=0.7, label=c1) 
-        plt.plot(x_axis_scale, x1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+        if plot_c6:
+            plt.plot(x_axis_scale, x1_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
 
-        plt.plot(x_axis_scale, x1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+        if plot_c7:
+            plt.plot(x_axis_scale, x1_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
 
         plt.fill_between(x_axis_scale, x1_pftanlc*0 + des_x1+gamma_underbar, 
                          x1_pftanlc*0 + des_x1-gamma_underbar, facecolor='green', alpha=0.2, interpolate=True, label='$\epsilon$-stability bound')
@@ -1511,8 +1526,10 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         fig, ax = plt.subplots()
         plt.plot(x_axis_scale, x2_pftanlc*0 + des_x2, '--g', label='$x_2^\star$')  # reference
         plt.plot(x_axis_scale, x2_pftanlc, 'blue', linewidth=2.5, alpha=0.7, label=c1)
-        plt.plot(x_axis_scale, x2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
-        plt.plot(x_axis_scale, x2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
+        if plot_c6:
+            plt.plot(x_axis_scale, x2_single_K1, 'purple', linewidth=2.5, alpha=0.7, label=c6)  # single controller K1
+        if plot_c7:
+            plt.plot(x_axis_scale, x2_single, 'orange', linewidth=2.5, alpha=0.7, label=c7)  # single controller
         plt.fill_between(x_axis_scale, x2_pftanlc*0 + des_x2+gamma_underbar, 
                          x2_pftanlc*0 + des_x2-gamma_underbar, facecolor='green', alpha=0.2, interpolate=True, label='$\epsilon$-stability bound')
         
@@ -1525,7 +1542,6 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.grid(color='lightgray',linestyle='--')
         plt.savefig(final_dir_ + title_fig_ref, dpi=dpi_)
         plt.close(fig)
-        
 
 
 def plot_comparison_three_ctrl(x_axis_scale, 
