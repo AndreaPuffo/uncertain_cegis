@@ -1496,7 +1496,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.fill_between(x_axis_scale, x1_pftanlc*0 + des_x1+gamma_underbar, 
                          x1_pftanlc*0 + des_x1-gamma_underbar, facecolor='green', alpha=0.2, interpolate=True, label='$\epsilon$-stability bound')
         
-        fault_location_y = x1_pftanlc[int(samples_number/2)]
+        fault_location_y = x1_pftanlc[int(samples_number/2)]*0 + des_x1
         plt.scatter(x_axis_scale[int(samples_number/2)], fault_location_y, s=100, c='red', label='$F_{%s}$ - fault injected' %act_faulty_test)
         plt.xlabel("Time [s]")
         plt.ylabel("Surge speed [m/s]")
@@ -1516,7 +1516,7 @@ def plot_comparison_three_single(x_all, u_all, V_all, x_axis_scale,
         plt.fill_between(x_axis_scale, x2_pftanlc*0 + des_x2+gamma_underbar, 
                          x2_pftanlc*0 + des_x2-gamma_underbar, facecolor='green', alpha=0.2, interpolate=True, label='$\epsilon$-stability bound')
         
-        fault_location_y = x2_pftanlc[int(samples_number/2)]
+        fault_location_y = x2_pftanlc[int(samples_number/2)]*0 + des_x2
         plt.scatter(x_axis_scale[int(samples_number/2)], fault_location_y, s=100, c='red', label='$F_{%s}$ - fault injected' %act_faulty_test)
         ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
         plt.xlabel("Time [s]")
