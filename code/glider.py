@@ -188,10 +188,10 @@ class AUV(BaseBenchmark):
         # h2=uT[5]##*0+1
         # h3=uT[6]#*0+1
         # h4=uT[7]#*0+1
-        h1=1
-        h2=1
-        h3=1
-        h4=1
+        h1=para[0]
+        h2=para[1]
+        h3=para[2]
+        h4=para[3]
         # B=rho*9.81*(NablaH+uT[0])
         F1_x=jnp.cos(alpha1)*uT[0]
         F2_x=jnp.cos(alpha2)*uT[1]
@@ -296,8 +296,8 @@ setOfVertices=[computeAB(x,u,p)]
 
 while(True):
     def synthesizeController():
-        Qx=onp.eye(stateSize)/10
-        R=onp.eye(inputSize)/10   #sqrt in realtà
+        Qx=onp.eye(stateSize)/1
+        R=onp.eye(inputSize)/100   #sqrt in realtà
         
         W=cp.Variable((stateSize,stateSize), symmetric=True)
         X=cp.Variable((inputSize,inputSize), symmetric=True)
@@ -316,7 +316,7 @@ while(True):
                             cp.hstack([(A@W+B@Q).T,W])                            
                   ])>>0,
             ]
-        prob = cp.Problem(cp.Minimize(0.0001*(cp.trace(X)+cp.trace(Qx@W))), constraints)
+        prob = cp.Problem(cp.Minimize(0.001*(cp.trace(X)+cp.trace(Qx@W))), constraints)
         prob.solve(solver='MOSEK',verbose=True)
         
         print("The optimal value is", prob.value)
