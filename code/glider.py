@@ -28,16 +28,8 @@ class BaseBenchmark:
             self.noiseCov=noiseCov;
             print('overwritten noise cov:',noiseCov)
         pass
-    def forward(self,uT,x0=None,norm=False):
-        global stateSize
-        global inputSize        
-        x0=onp.reshape(x0,(stateSize,1))
-        uT=onp.reshape(uT,(inputSize,1))
-        xN=self.innerDynamic(x0,uT)
-        xN=onp.reshape(xN,(stateSize,1))
-            
-        return xN
-    def innerDynamic(x0,uT):
+
+    def innerDynamic(x0,uT,p):
         pass
     
         
@@ -63,7 +55,7 @@ class quasiLPV(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT):
+    def innerDynamic(self,xT, uT,p):
         uT=uT.reshape((inputSize,1))
         xT=xT.reshape((stateSize,1))
         xN=jnp.zeros((stateSize,1))        
@@ -93,7 +85,7 @@ class TxT(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT):
+    def innerDynamic(self,xT, uT,p):
         uT=uT.reshape((inputSize,1))
         xN=jnp.zeros((stateSize,1))        
         xN=self.A@xT+jnp.tanh(xT)+self.B@uT+jnp.maximum(self.B@uT,0)-1.55*jnp.maximum(-self.B@(uT+0.5),0)
@@ -117,7 +109,7 @@ class glider(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT):
+    def innerDynamic(self,xT, uT,p):
         ms=44.9
         mp=11
         m1=64.84
@@ -151,6 +143,81 @@ class glider(BaseBenchmark):
         xN=xN.at[1].set(xT[1]+Ts*v2dot)
         return xN.reshape((stateSize,1))
 
+
+
+        
+class AUV(BaseBenchmark):
+    def __init__(self,enableNoise):       
+        super().__init__(0.02,enableNoise)
+        
+        global stateSize
+        assert stateSize==4
+        global inputSize
+        assert inputSize==4
+        global paraSize
+        assert paraSize==4
+
+        pass
+    
+    @partial(jax.jit, static_argnums=(0,))
+    def innerDynamic(self,xT, uT,para):
+        xT=xT.reshape((stateSize,1))
+        uT=uT.reshape((inputSize))
+        para=para.reshape((paraSize))
+        m= 500.0
+        Jz= 300.0
+        Xu= 6.106 
+        Xuu= 5.0
+        Yv= 11.203 
+        Yvv= 10.114
+        Nr= 210.0
+        Nrr= 3.0 
+        l1x= -1.01 
+        l1y= -0.353
+        alpha1= 0.7853981633974483
+        l2x= -1.01 
+        l2y= 0.353 
+        alpha2= -0.7853981633974483
+        l3x= 1.01
+        l3y= -0.353 
+        alpha3= -0.7853981633974483
+        l4x= 1.01 
+        l4y= 0.353 
+        alpha4= 0.7853981633974483
+        # h1=uT[4]#*0+1
+        # h2=uT[5]##*0+1
+        # h3=uT[6]#*0+1
+        # h4=uT[7]#*0+1
+        h1=1
+        h2=1
+        h3=1
+        h4=1
+        # B=rho*9.81*(NablaH+uT[0])
+        F1_x=jnp.cos(alpha1)*uT[0]
+        F2_x=jnp.cos(alpha2)*uT[1]
+        F3_x=jnp.cos(alpha3)*uT[2]
+        F4_x=jnp.cos(alpha4)*uT[3]
+        
+        F1_y=jnp.sin(alpha1)*uT[0]
+        F2_y=jnp.sin(alpha2)*uT[1]
+        F3_y=jnp.sin(alpha3)*uT[2]
+        F4_y=jnp.sin(alpha4)*uT[3]
+        
+        x1dot=1/m*(-Xu*xT[0]-Xuu*xT[0]**2+m*xT[1]*xT[2]+h1*F1_x+F2_x*h2+F3_x*h3+F4_x*h4)
+        x2dot=1/m*(-Yv*xT[1]-Yvv*xT[1]**2+m*xT[0]*xT[2]+h1*F1_y+h2*F2_y+h3*F3_y+h4*F4_y)
+        x3dot=1/Jz*(-Nr*xT[2]-Nrr*xT[2]**2+h1*(-F1_x*l1y+F1_y*l1x)+
+                     h2*(-F2_x*l2y+F2_y*l2x)+h3*(-F3_x*l3y+F3_y*l3x)+h4*(-F4_x*l4y+F4_y*l4x))
+        x4dot=xT[2]
+        
+        Ts=0.05
+        xN=jnp.zeros((stateSize,1))        
+        xN=xN.at[0].set(xT[0]+Ts*x1dot)
+        xN=xN.at[1].set(xT[1]+Ts*x2dot)
+        xN=xN.at[2].set(xT[2]+Ts*x3dot)
+        xN=xN.at[3].set(xT[3]+Ts*x4dot)
+        
+        return xN.reshape((stateSize,1))
+
         
 class squaredTank(BaseBenchmark):
     def __init__(self,enableNoise):       
@@ -163,7 +230,7 @@ class squaredTank(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT):
+    def innerDynamic(self,xT, uT,p):
         uT=uT.reshape((inputSize))
         xT=xT.reshape((stateSize,))
         xT=jnp.maximum(xT,xT*0);
@@ -179,16 +246,19 @@ class squaredTank(BaseBenchmark):
     
 
 import sys
-benchamark_id= 4
+benchamark_id= 5
        
 switch_dict = {    
-    1: lambda: (squaredTank,2,1,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
-    2: lambda: (glider,2,2,scipy.optimize.Bounds(onp.array([-1,-1,-1,-onp.pi/8]),onp.array([1,1,1,onp.pi/8]))),
-    3: lambda: (quasiLPV,3,2,scipy.optimize.Bounds(onp.ones((5,))*-3,onp.ones((5,))*3)),
-    4: lambda: (TxT,1,1,scipy.optimize.Bounds(-onp.ones((2,))*7,onp.ones((2,))*7))
+    1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
+    2: lambda: (glider,2,2,0,scipy.optimize.Bounds(onp.array([-1,-1,-1,-onp.pi/8]),onp.array([1,1,1,onp.pi/8]))),
+    3: lambda: (quasiLPV,3,2,0,scipy.optimize.Bounds(onp.ones((5,))*-3,onp.ones((5,))*3)),
+    4: lambda: (TxT,1,1,0,scipy.optimize.Bounds(-onp.ones((2,))*7,onp.ones((2,))*7)),
+    5: lambda: (AUV,4,4,4,scipy.optimize.Bounds(
+                            onp.array([-1,-1,-1,-1,-40,-40,-40,-40,0,0,0,0]),
+                            onp.array([1,1,1,1,40,40,40,40,1,1,1,1])))
 }
      
-systemClass,stateSize,inputSize,Bounds=switch_dict.get(benchamark_id)()
+systemClass,stateSize,inputSize,paraSize,Bounds=switch_dict.get(benchamark_id)()
 
 
 
@@ -197,7 +267,7 @@ onp.random.seed(0)
 jacA=jax.jit(jax.jacobian(system.innerDynamic))
 jacB=jax.jit(jax.jacobian(system.innerDynamic,argnums=1))
 
-computeAB=lambda x,u: [jacA(x,u).reshape((stateSize,stateSize)),jacB(x,u).reshape((stateSize,inputSize))]
+computeAB=lambda x,u,p: [jacA(x,u,p).reshape((stateSize,stateSize)),jacB(x,u,p).reshape((stateSize,inputSize))]
 
 
 #%%
@@ -211,7 +281,7 @@ max_iter = 8000  # maximum number of iterations
 beta = 3e-3  # beta controls the usage of the local optimizers during the optimization process
 # With a lower value of beta HALO will use the local search more rarely and viceversa.
 # The parameter beta must be less than or equal to 1e-2 or greater than equal to 1e-4.
-local_optimizer = 'Nelder-Mead' # Choice of local optimizer from scipy python library.
+local_optimizer = 'L-BFGS-B' # Choice of local optimizer from scipy python library.
 # The following optimizers are available: 'L-BFGS-B', 'Nelder-Mead', 'TNC' and 'Powell'.
 # For more infomation about the local optimizers please refer the scipy documentation.
 verbose = 0  # this controls the verbosity level, fixed to 0 no output of the optimization progress 
@@ -221,12 +291,13 @@ verbose = 0  # this controls the verbosity level, fixed to 0 no output of the op
 
 x=onp.zeros((stateSize))+0.1;
 u=onp.zeros((inputSize))+0.1
-setOfVertices=[computeAB(x,u)]
+p=onp.zeros((paraSize))+0.1
+setOfVertices=[computeAB(x,u,p)]
 
 while(True):
     def synthesizeController():
-        Qx=onp.eye(stateSize)
-        R=onp.eye(inputSize)   #sqrt in realtà
+        Qx=onp.eye(stateSize)/10
+        R=onp.eye(inputSize)/10   #sqrt in realtà
         
         W=cp.Variable((stateSize,stateSize), symmetric=True)
         X=cp.Variable((inputSize,inputSize), symmetric=True)
@@ -245,7 +316,7 @@ while(True):
                             cp.hstack([(A@W+B@Q).T,W])                            
                   ])>>0,
             ]
-        prob = cp.Problem(cp.Minimize(cp.trace(X)+cp.trace(Qx@W)), constraints)
+        prob = cp.Problem(cp.Minimize(0.0001*(cp.trace(X)+cp.trace(Qx@W))), constraints)
         prob.solve(solver='MOSEK',verbose=True)
         
         print("The optimal value is", prob.value)
@@ -265,13 +336,14 @@ while(True):
     
     
     def costEigPK(x,P,K):
-        x=onp.reshape(x, (1,stateSize+inputSize))
+        x=onp.reshape(x, (1,stateSize+inputSize+paraSize))
         # A,B=approximateOnPointJAC(x,nbrs)
         xState=x[0:1,0:stateSize]
-        u=x[0:1,stateSize:]
-        xTT=system.forward(u,xState)
+        u=x[0:1,stateSize:stateSize+inputSize]
+        p=x[0:1,stateSize+inputSize:]
+        # xTT=system.forward(u,xState,p)
         # overallDataset+=[(xState.T,u[0],xTT,computeAB(xState.T,u))]
-        A,B=computeAB(xState.T,u)
+        A,B=computeAB(xState.T,u,p)
         eig=scipy.sparse.linalg.eigsh(            
             onp.vstack([onp.hstack([P,(A+B@K).T@P]),
                         onp.hstack([P@(A+B@K),P])]),1,sigma=0,return_eigenvectors=False)
@@ -289,10 +361,11 @@ while(True):
         break
     else:
         x=result['best_x']
-        x=onp.reshape(x, (1,stateSize+inputSize))
+        x=onp.reshape(x, (1,stateSize+inputSize+paraSize))
         xState=x[0:1,0:stateSize]
-        u=x[0:1,stateSize:]
-        setOfVertices+=[computeAB(xState,u)]
+        u=x[0:1,stateSize:stateSize+inputSize]
+        p=x[0:1,stateSize+inputSize:]
+        setOfVertices+=[computeAB(xState,u,p)]
 
 
 
