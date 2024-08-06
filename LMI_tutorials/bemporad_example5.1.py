@@ -72,7 +72,7 @@ not very clear from he paper, but maybe Ka and Kb are given (?)
 Ka = np.array([[-0.3175, -1.1664]])
 Kb = np.array([[-0.0527, -1.0280]])
 fig, ax = plt.subplots(1, 1, figsize=(8, 4.5))
-taus = [0.475, 0.48, 0.49, 0.5, 0.525, 0.55, 0.575, 0.6, 0.625, 0.65, 0.675, 0.7, 0.725, 0.75, 0.775, 0.776, 0.78]
+taus = [0.49, 0.5,  0.6, 0.7, 0.75, 0.775, 0.776, 0.78]
 
 for idx in range(len(taus)):
 
@@ -86,7 +86,7 @@ for idx in range(len(taus)):
     # section 4.2 says "the associated invariant set E(Qa) can be computed by solving the SDP
     # in Lemma 2 with objective given as max{trace(Q )} instead of min{trace(Q )}"
     prob = cp.Problem(cp.Maximize( cp.trace(Q) ), constraints=constraints)
-    prob.solve(solver='SCS')
+    prob.solve()
     if prob.status == 'optimal':
         Qa = Q.value
         K = Y.value @ np.linalg.inv(Qa)  # this should be Ka or Kb again

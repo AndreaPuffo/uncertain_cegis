@@ -80,8 +80,7 @@ not very clear from he paper, but maybe Ka and Kb are given (?)
 
 Ka = np.array([[-13.4535, 7.6441, -6.1226, 5.7299]])
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 4.5))
-taus = [1e-4, 1e-3, 1e-2, 0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1.-1e-2, 1.-1e-3]
+taus = [1e-4, 1e-3, 1e-2, 0.1, 0.2, 0.4, 0.5, 0.6, 0.8, 0.9, 1.-1e-2, 1.-1e-3, 1.-1e-4]
 
 for idx in range(len(taus)):
 
@@ -103,32 +102,3 @@ for idx in range(len(taus)):
         print(f' Found a solution for tau: {taus[idx]}')
         print(f'Qa: {Qa}')
         print(f'K: {K}')
-        plot_ellipse_matrix_form(np.linalg.inv(Qa), ax, radius_ellipse=1.,
-                                 edgecolor=color_cycle[idx%len(color_cycle)], label=taus[idx])
-
-# plt.xlim([-20, 20])
-# plt.ylim([-20, 20])
-plt.grid()
-plt.legend()
-
-# plot_ellipse_matrix_form(np.linalg.inv(np.array([
-#     [1.8024 * 1e4, -0.095*1e4],
-#     [-0.095*1e4, 0.01*1e4]
-# ])), ax, radius_ellipse=1., edgecolor='red', linestyle='dashed')
-
-
-
-x0 = np.array([[-134., 7.]]).T
-xs = [x0]
-
-# sanity check for plots:
-# this ellipse should approx go from -130 to 130 for x1, and -10 to 10 for x2
-plot_ellipse_matrix_form(np.linalg.inv(np.array([
-    [1.8024 * 1e4, -0.095*1e4],
-    [-0.095*1e4, 0.01*1e4]
-])), ax, radius_ellipse=1., edgecolor='red', linestyle='dashed', label='Bemporad')
-
-
-
-plt.show()
-
