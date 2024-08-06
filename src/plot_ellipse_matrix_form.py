@@ -30,7 +30,7 @@ def plot_ellipse_matrix_form(matrix, ax, radius_ellipse=1, facecolor='none', **k
     B = matrix[0,1] + matrix[1,0]
     C = matrix[1,1]
     theta = 0.5 * np.arctan2(-B, C-A)
-
+    # find the reasoning at https://en.wikipedia.org/wiki/Ellipse
     a = - np.sqrt( 2. * -radius_ellipse*(B**2 - 4.*A*C) * ( A + C + np.sqrt( (A-C)**2 + B**2 ) ) ) / (B**2 - 4.*A*C)
     b = - np.sqrt( 2. * -radius_ellipse*(B**2 - 4.*A*C) * ( A + C - np.sqrt( (A-C)**2 + B**2 ) ) ) / (B**2 - 4.*A*C)
 
