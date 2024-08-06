@@ -66,13 +66,19 @@ h = L.shape[0]
 norm_w = 1.  # w^T * w <= 1
 
 """
-not very clear from he paper, but maybe Ka and Kb are given (?)
+not very clear from the paper, but maybe Ka and Kb are given (?)
 """
 
 Ka = np.array([[-0.3175, -1.1664]])
-Kb = np.array([[-0.0527, -1.0280]])
+# Kb = np.array([[-0.0527, -1.0280]])
 fig, ax = plt.subplots(1, 1, figsize=(8, 4.5))
-taus = [0.49, 0.5,  0.6, 0.7, 0.75, 0.775, 0.776, 0.78]
+fig_max, ax_max = plt.subplots(1, 1, figsize=(8, 4.5))
+
+# line search for tau
+taus = [1e-4, 1e-3, 1e-2, 0.1, 0.2, 0.3, 0.4, 0.425, 0.426, 0.45, 0.475,
+        0.49, 0.5,  0.6, 0.7, 0.75, 0.775, 0.776, 0.78,
+        0.8, 0.9, 1.-1e-2, 1.-1e-3, 1.-1e-4]
+
 
 for idx in range(len(taus)):
 
@@ -91,18 +97,37 @@ for idx in range(len(taus)):
         Qa = Q.value
         K = Y.value @ np.linalg.inv(Qa)  # this should be Ka or Kb again
         H = Z.value @ np.linalg.inv(Qa)
+        print('-'*80)
         print(f' Found a solution for tau: {taus[idx]}')
         print(f'Qa: {Qa}')
         print(f'K: {K}')
         plot_ellipse_matrix_form(np.linalg.inv(Qa), ax, radius_ellipse=1.,
                                  edgecolor=color_cycle[idx%len(color_cycle)], label=taus[idx])
 
+    ######################################################
+    # try Lemma 3 and maximisation of region of attraction
+    ######################################################
+    Qmax, Ymax, Zmax, constraints_max = constraints_lemma23(As=As, Bs=Bs, Bws=Bws, Es=Es, L=L,
+                                           umax=u_max, tau=taus[idx], K=None)
+    prob_max = cp.Problem(cp.Maximize(cp.trace(Qmax)), constraints=constraints_max)
+    prob_max.solve()
+
+    if prob_max.status == 'optimal':
+        Qmax = Qmax.value
+        Kmax = Ymax.value @ np.linalg.inv(Qmax)
+        Hmax = Zmax.value @ np.linalg.inv(Qmax)
+        print('-'*80)
+        print(f' Found a solution for Maximisation problem with tau: {taus[idx]}')
+        print(f'QM: {Qmax}')
+        print(f'Kb: {Kmax}')
+        plot_ellipse_matrix_form(np.linalg.inv(Qmax), ax_max, radius_ellipse=1.,
+                                 edgecolor=color_cycle[idx % len(color_cycle)], label=taus[idx])
+
+
+
 # plt.xlim([-20, 20])
 # plt.ylim([-20, 20])
 plt.grid()
-plt.legend()
-
-
 
 
 x0 = np.array([[-134., 7.]]).T
@@ -110,15 +135,16 @@ xs = [x0]
 
 # sanity check for plots:
 # this ellipse should approx go from -130 to 130 for x1, and -10 to 10 for x2
-# plot_ellipse_matrix_form(np.linalg.inv(np.array([
-#     [1.8024 * 1e4, -0.095*1e4],
-#     [-0.095*1e4, 0.01*1e4]
-# ])), ax, radius_ellipse=1., edgecolor='red', linestyle='dashed', label='Bemporad')
+plot_ellipse_matrix_form(np.linalg.inv(np.array([
+    [1.8024 * 1e4, -0.095*1e4],
+    [-0.095*1e4, 0.01*1e4]
+])), ax_max, radius_ellipse=1., edgecolor='red', linestyle='dashed', label='Bemporad QM')
 plot_ellipse_matrix_form(np.linalg.inv(np.array([
     [393.525, -93.8734],
     [-93.8734, 33.6350]
 ])), ax, radius_ellipse=1., edgecolor='red', linestyle='dashed', label='Bemporad Qa')
-plt.legend()
+fig.legend()
+fig_max.legend()
 
 
 plt.show()
