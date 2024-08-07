@@ -94,7 +94,11 @@ for idx in range(len(taus)):
     # section 4.2 says "the associated invariant set E(Qa) can be computed by solving the SDP
     # in Lemma 2 with objective given as max{trace(Q )} instead of min{trace(Q )}"
     prob = cp.Problem(cp.Maximize( cp.trace(Q) ), constraints=constraints)
-    prob.solve(solver='SCS')
+    try:
+        prob.solve(solver='CLARABEL')  # pip install clarabel
+    except cp.SolverError:
+        prob.solve()
+
     if prob.status == 'optimal':
         Qa = Q.value
         K = Y.value @ np.linalg.inv(Qa)  # this should be Ka or Kb again
