@@ -205,7 +205,7 @@ class AUV(BaseBenchmark):
                      h2*(-F2_x*l2y+F2_y*l2x)+h3*(-F3_x*l3y+F3_y*l3x)+h4*(-F4_x*l4y+F4_y*l4x))
         x4dot=xT[2]
         
-        Ts=.05
+        Ts=.01
         xN=jnp.zeros((stateSize,1))        
         xN=xN.at[0].set(xT[0]+Ts*x1dot)
         xN=xN.at[1].set(xT[1]+Ts*x2dot)
@@ -250,8 +250,8 @@ switch_dict = {
     # 3: lambda: (quasiLPV,3,2,0,scipy.optimize.Bounds(onp.ones((5,))*-3,onp.ones((5,))*3)),
     # 4: lambda: (TxT,1,1,0,scipy.optimize.Bounds(-onp.ones((2,))*7,onp.ones((2,))*7)),
     5: lambda: (AUV,4,4,4,scipy.optimize.Bounds(
-                            onp.array([-1,-1,-1,-1,-38,-38,-38,-38,0.0]),
-                            onp.array([1,1,1,1,38,38,38,38,1])))
+                            onp.array([-3,-3,-3,-3,-38,-38,-38,-38,0.0]),
+                            onp.array([3,3,3,3,38,38,38,38,1])))
 }
      
 systemClass,stateSize,inputSize,paraSize,Bounds=switch_dict.get(benchamark_id)()
@@ -307,10 +307,10 @@ while(True):
             Zr=Z[k:k+1,:]
             print(Zr.shape)
             constraints+=[                
-                cp.vstack([cp.hstack([onp.eye(1)*(Bounds.ub[stateSize+k]*100**2),   Zr]),
+                cp.vstack([cp.hstack([onp.eye(1)*(Bounds.ub[stateSize+k]**2),   Zr]),
                             cp.hstack([ Zr.T,     Q])])>>0]
             
-        L=onp.eye(stateSize)
+        L=onp.diag(1/Bounds.ub[:stateSize]**2)
         for k in range(stateSize):
             Lr=L[k:k+1,:]
             print(Lr.shape)
@@ -394,7 +394,7 @@ while(True):
     Q=onp.linalg.inv(P)
     costEig=lambda x: costEigPK(x,Q,K,H)
     
-    res=scipy.optimize.direct(costEig,bounds=Bounds,locally_biased=True,maxiter=2000,maxfun=8000,vol_tol=1e-8 ,eps=1e-3,len_tol=1e-3   ) 
+    res=scipy.optimize.direct(costEig,bounds=Bounds,locally_biased=True,vol_tol=1e-8,len_tol=1e-3   ) 
     # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds) 
     # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
     # result=halo.minimize();
@@ -417,7 +417,30 @@ while(True):
 
 
 
+#%%
+story=[]
+xState=x[0:1,0:stateSize]*0+2
+p=onp.ones((1,paraSize))
+for k in range(0,10000):
+    ref=onp.array(xState*0)
+    # ref[-1]=-.2
+    err=(xState-ref).T
+    uF=onp.clip((K@err).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
+    xN=system.innerDynamic(xState,uF,p)
+    if k==3000:
+        p[0,2]=.1
+    story+=[(xN,uF)]
+    xState=onp.reshape(xN,(1,stateSize))
+    print(xState)
 
+    
+import matplotlib.pyplot as plt
+plt.figure()
+plt.title('input')
+plt.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
+plt.figure()
+plt.title('state')
+plt.plot(onp.array([x[0] for x in story]).reshape((-1,stateSize)))
 #%%
 def Khotare():
     pass
