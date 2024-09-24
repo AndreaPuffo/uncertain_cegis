@@ -16,7 +16,9 @@ import matplotlib.pyplot as plt
 import jax.experimental
 #%%
 from benchmarks import glider, AUV, twoStateAUV
-from cegis import CegisBemporad
+from cegis import CegisBemporad, CegisEllipsoid
+from ctrl_synthesis import controllerH2
+from plotting import simulateController, plotEllipse
     
 
 import sys
@@ -65,145 +67,40 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
 Kinf=-K_Hinf1
 
 #%%
-def simulateController(K,label,ax1,ax2,x0=None):
-    story=[]
-    if x0 is None:
-        xState=onp.zeros((1,stateSize))
-        xState[0,0]=0
-        xState[0,1]=0
-    else:
-        xState=onp.reshape(x0,(1,stateSize))
-    p=onp.ones((1,paraSize))
-    for k in range(0,35000):
-        ref=onp.array(xState*0)
-        ref[0,0]=onp.cos(k/1000)/5+0.5
-        ref[0,1]=onp.cos((600+k)/1000)/5
-        # err=
-        # xState[0,-1]+=-.1
-        uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
-        # uF=onp.array(K@(xState-ref).T).ravel()
-        
-        xN=system.innerDynamic(xState,uF,p)
-        p=onp.ones((1,paraSize))
-        if k>=3000 and k<=4000:
-            p[0,2]=.1
-        if k>=5000:
-            p[0,1]=.1
-        else:
-            pass
-        story+=[(xState,uF)]
-        xState=onp.array(onp.reshape(xN,(1,stateSize)))
-        
-        # print(xState)
-    
-        
-    import matplotlib.pyplot as plt
-    
-    ax1.title.set_text('input '+str(label))
-    ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
-    
-    ax2.title.set_text('state '+str(label))
-    ax2.plot(onp.array([x[0] for x in story]).reshape((-1,stateSize)))
-    
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
 fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-simulateController(Ksat,'K sat',ax1,ax2)
+simulateController(system, Ksat, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+                   label='K sat', axes=[ax1,ax2])
 # plt.figure()
 if benchamark_id==6:
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(Kinf,'$H_{inf}$',ax1,ax2)
+    simulateController(system, Kinf, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+                       label='$H_{inf}$', axes=[ax1,ax2])
 
-    #%%
-    PKinf=computeEllipsoid(Kinf)
-    import numpy as np
-    #%%
+    PKinf = CegisEllipsoid(Kinf, system, computeAB, Bounds, mask, tau)
+
     plt.figure()
-    
-    # Define the symmetric matrix Q
-    def printEllipse(Q,colorString,label):
-        
-        # Q=np.linalg.inv(Psat)
-        # Create a grid of points
-        x = np.linspace(-2, 2, 100)
-        y = np.linspace(-2, 2, 100)
-        X, Y = np.meshgrid(x, y)
-        Z = np.zeros_like(X)
-        
-        # Compute the quadratic form values on the grid
-        for i in range(X.shape[0]):
-            for j in range(X.shape[1]):
-                vec = np.array([X[i, j], Y[i, j]]).reshape((2,1))
-                Z[i, j] = vec.T@Q@vec
-                
-        contour=plt.contour(X, Y, Z, levels=[1], colors=colorString)
-        plt.xlabel('x1')
-        plt.ylabel('x2')
-        plt.title('Contour plot of $x^T Q x = 1$')
-        # plt.gca().set_aspect('equal', adjustable='box')
-        plt.clabel(contour,contour.levels,fmt= lambda x: str(label))
-        # plt.colorbar(contour)
-    printEllipse(Psat,'b','Psat')
-    printEllipse(PKinf[0],'r','$H_{inf}$')
+    plotEllipse(Psat,'b','Psat')
+    plotEllipse(PKinf[0],'r','$H_{inf}$')
     plt.show()
 
 
 #%%
-def H2():
-    # pass
-    import cvxpy as cp
-    
-    
-    x=onp.zeros((stateSize))
-    u=onp.zeros((inputSize))
-    p=onp.ones((paraSize))
-    setOfVertices=[computeAB(x,u,p)]
-    
 
-    def synthesizeController():
-        Qx=onp.eye(stateSize)*1e1
-        R=onp.eye(inputSize)/1e1   #sqrt in realtà
-        
-        X=cp.Variable((stateSize,stateSize), symmetric=True)
-        Y=cp.Variable((inputSize,inputSize), symmetric=True)
-        W=cp.Variable((inputSize,stateSize))
-        gamma=cp.Variable((1,1))
-        
-        A,B=setOfVertices[0]
-        constraints = [X >> onp.eye(stateSize),  #Y>>0, gamma<=0  ,              
-                       cp.vstack([ cp.hstack([-Y,      (R@W)]),
-                                   cp.hstack([(R@W).T, -X])                               
-                         ])<<0,                  
-            cp.vstack([cp.hstack([-X+onp.eye(stateSize),      A@X+B@W]),
-                        cp.hstack([(A@X+B@W).T,-X])                            
-              ])<<0
-            
-        ]
-        prob = cp.Problem(cp.Minimize(cp.trace(Qx@X@Qx.T)+cp.trace(Y)), constraints)
-        prob.solve(solver='MOSEK',verbose=True)
-        
-        print("The optimal value is", prob.value)
-        # print("A solution X is")
-        P=onp.linalg.inv(X.value);
-        K=(W.value@P)
-        
-        for AB in setOfVertices:
-            A,B=AB
-            print(onp.linalg.eigvals(A+B@K))
-            assert(onp.all(onp.abs(onp.linalg.eigvals(A+B@K))<1))
-        return P,K
-        
-    P,K=synthesizeController()
-    
-    return P,K
 if benchamark_id==5:
-    PH2,KH2=H2()
+    PH2, KH2 = controllerH2(stateSize, inputSize, paraSize, computeAB)
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(KH2,'$H_{2} from 2 $',ax1,ax2,2*onp.ones((1,stateSize)))
+    simulateController(system, KH2, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+                       label=r'$H_{2}$ from 2', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
+
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(KH2,'$H_{2}$ from 0',ax1,ax2)
+    simulateController(system, KH2, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+                       label=r'$H_{2}$ from 0', axes=[ax1,ax2])
+
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(Ksat,'$K sat from 2$ from 0',ax1,ax2,2*onp.ones((1,stateSize)))
+    simulateController(system, Ksat, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+                       label=r'Bemporad $K_{sat}$ from 2', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
     # PKH2=computeEllipsoid(KH2)
 
 #%%

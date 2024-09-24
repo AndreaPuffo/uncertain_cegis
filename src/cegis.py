@@ -1,7 +1,7 @@
 import numpy as onp
 import scipy
-from ctrl_synthesis import synthesizeBemporadController, synthesizeKhotareController
-from verifier import verifierBemporad, verifierKhotare
+from ctrl_synthesis import synthesizeBemporadController, synthesizeKhotareController, synthesizeEllipsoidController
+from verifier import verifierBemporad, verifierKhotare, verifierEllipsoid
 
 
 def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
@@ -13,7 +13,7 @@ def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     u = onp.zeros((inputSize,)) + 1
     p = onp.ones((paraSize,))
     setOfVertices = [computeAB(x, u, p)]
-    print(setOfVertices)
+    # print(setOfVertices)
 
     found = False
     max_cegis_iters = 100
@@ -21,7 +21,7 @@ def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     while not found and itr < max_cegis_iters:
 
         print('='*80)
-        print(f'CEGIS Iteration number: {itr}')
+        print(f'CEGIS Iteration {itr}')
 
         # learner
         P, K, H = synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertices, tau)
@@ -62,8 +62,41 @@ def CegisKhotare(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     itr = 1
     while not found and itr < max_cegis_iters:
 
+        # learner
         P, K = synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertices, tau)
 
         # verifier
+        newVertices, found = verifierKhotare(P, K, computeAB, paraSize, matrixbounds, mask, tau)
+        setOfVertices = setOfVertices + newVertices
 
-    return K, P
+        # update iteration counter
+        itr += 1
+
+    return P, K
+
+
+def CegisEllipsoid(Kext, benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
+
+    stateSize, inputSize, paraSize = benchmark.stateSize, benchmark.inputSize, benchmark.paraSize
+
+    x = onp.zeros((stateSize)) + 1
+    u = onp.zeros((inputSize)) + 1
+    p = onp.ones((paraSize))
+    setOfVertices = [computeAB(x, u, p)]
+    print(setOfVertices)
+
+    found = False
+    max_cegis_iters = 100
+    itr = 1
+    while not found and itr < max_cegis_iters:
+
+        # learner
+        P, K, H = synthesizeEllipsoidController(Kext, stateSize, inputSize, matrixbounds, setOfVertices, tau)
+        # verifier
+        newVertices, found = verifierEllipsoid(P, K, H, computeAB, paraSize, matrixbounds, mask, tau)
+        setOfVertices = setOfVertices + newVertices
+
+        # update iteration counter
+        itr += 1
+
+    return P, K
