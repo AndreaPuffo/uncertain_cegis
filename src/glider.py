@@ -37,13 +37,12 @@ switch_dict = {
      
 systemClass,stateSize,inputSize,paraSize,Bounds,mask=switch_dict.get(benchamark_id)()
 
-
-
 system=systemClass(enableNoise=False)
 onp.random.seed(0)
 jacA=jax.jit(jax.jacobian(system.innerDynamic))
 jacB=jax.jit(jax.jacobian(system.innerDynamic,argnums=1))
 
+# compute jacobians on the fly, returning A and B matrices
 computeAB=lambda x,u,p: [jacA(x,u,p).reshape((stateSize,stateSize)),jacB(x,u,p).reshape((stateSize,inputSize))]
 
 
@@ -155,8 +154,8 @@ def H2():
     import cvxpy as cp
     
     
-    x=onp.zeros((stateSize));
-    u=onp.zeros((inputSize));
+    x=onp.zeros((stateSize))
+    u=onp.zeros((inputSize))
     p=onp.ones((paraSize))
     setOfVertices=[computeAB(x,u,p)]
     
@@ -208,133 +207,8 @@ if benchamark_id==5:
     # PKH2=computeEllipsoid(KH2)
 
 #%%
-def Khotare():
-    pass
-    import cvxpy as cp
-    from halo import HALO
+
     
-    
-    max_feval = 8000  # maximum number of function evaluations
-    max_iter = 8000  # maximum number of iterations
-    beta = 1e-2  # beta controls the usage of the local optimizers during the optimization process
-    # With a lower value of beta HALO will use the local search more rarely and viceversa.
-    # The parameter beta must be less than or equal to 1e-2 or greater than equal to 1e-4.
-    local_optimizer = 'L-BFGS-B' # Choice of local optimizer from scipy python library.
-    # The following optimizers are available: 'L-BFGS-B', 'Nelder-Mead', 'TNC' and 'Powell'.
-    # For more infomation about the local optimizers please refer the scipy documentation.
-    verbose = 0  # this controls the verbosity level, fixed to 0 no output of the optimization progress 
-    # will be printed.
-    
-    
-    
-    x=onp.zeros((stateSize))+0.5;
-    u=onp.zeros((inputSize))+0.5;
-    p=onp.ones((paraSize))
-    setOfVertices=[computeAB(x,u,p)]
-    
-    while(True):
-        def synthesizeController():
-            Qx=onp.eye(stateSize)/1
-            R=onp.eye(inputSize)/1   #sqrt in realtà
-            
-            W=cp.Variable((stateSize,stateSize), symmetric=True)
-            X=cp.Variable((inputSize,inputSize), symmetric=True)
-            Q=cp.Variable((inputSize,stateSize))
-            gamma=cp.Variable((1,1))
-            
-            A,B=setOfVertices[0]
-            constraints = [W >> 1*onp.eye(stateSize),
-                            W<<100*onp.eye(stateSize),
-                            # cp.vstack([ cp.hstack([onp.eye(1),      onp.ones((stateSize,1)).T]),
-                            #             cp.hstack([onp.ones((stateSize,1)),W])                               
-                            #   ])>>0
-                           # cp.vstack([ cp.hstack([-X,      (R@Q)]),
-                           #             cp.hstack([(R@Q).T, -W])                               
-                           #   ])<<0
-                           ]
-            L=onp.diag(1/Bounds.ub[:stateSize])
-            for k in range(stateSize):
-                Lr=L[k:k+1,:]
-                print(Lr.shape)
-                constraints+=[                
-                    cp.vstack([cp.hstack([onp.eye(1),   Lr@W]),
-                                cp.hstack([ W@Lr.T,     W])])>>0
-                    ]
-                
-            for AB in setOfVertices:
-                A,B=AB
-                constraints += [                    
-                    # cp.vstack([cp.hstack([-W+onp.eye(stateSize),      A@W+B@Q]),
-                    #             cp.hstack([(A@W+B@Q).T,-W])                            
-                    #   ])<<-1e-2
-                    cp.vstack([cp.hstack([W,      (A@W+B@Q).T,W@Qx,Q.T@R]),
-                                cp.hstack([(A@W+B@Q),W,W*0,Q.T*0]),
-                                cp.hstack([(W@Qx).T,W*0,gamma*onp.eyMastie(stateSize),Q.T*0]),
-                                cp.hstack([(Q.T@R).T,Q*0,Q*0,gamma*onp.eye(inputSize)])                           
-                      ])>>1e-2
-                    
-                ]
-            prob = cp.Problem(cp.Minimize(gamma/1000), constraints)
-            prob.solve(solver='MOSEK',verbose=True)
-            
-            print("The optimal value is", prob.value)
-            # print("A solution X is")
-            P=onp.linalg.inv(W.value);
-            K=(Q.value@onp.linalg.inv(W.value))
-            
-            for AB in setOfVertices:
-                A,B=AB
-                print(onp.linalg.eigvals(A+B@K))
-                assert(onp.all(onp.abs(onp.linalg.eigvals(A+B@K))<1))
-            return P,K
-        
-        P,K=synthesizeController()
-        
-        
-        
-        
-        def costEigPK(x,P,K):
-            x=onp.reshape(x, (1,stateSize+inputSize+1))
-            # A,B=approximateOnPointJAC(x,nbrs)
-            xState=x[0:1,0:stateSize]
-            u=x[0:1,stateSize:stateSize+inputSize]
-            p=x[0:1,stateSize+inputSize:]
-            # xTT=system.forward(u,xState,p)
-            # overallDataset+=[(xState.T,u[0],xTT,computeAB(xState.T,u))]
-            v=onp.Inf;
-            for k in range(paraSize):
-                para_v=onp.ones((paraSize,1));
-                para_v[k]=p[0:1];
-                A,B=computeAB(xState.T,u,para_v)
-                eig=scipy.sparse.linalg.eigsh(            
-                    onp.vstack([onp.hstack([P,(A+B@K).T@P]),
-                                onp.hstack([P@(A+B@K),P])]),1,which='SA',return_eigenvectors=False)
-                # print(eig)
-                v=min(min(onp.real(eig)),v)
-            return v
-        
-        costEig=lambda x: costEigPK(x,P,K)
-        
-        res=scipy.optimize.direct(costEig,bounds=Bounds,locally_biased=True) 
-        # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds) 
-        # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
-        # result=halo.minimize();
-        result={'best_f':res.fun,'best_x':res.x}
-        print(result['best_f'])
-        if result['best_f']>=0:
-            break
-        else:
-            x=result['best_x']
-            x=onp.reshape(x, (1,stateSize+inputSize+1))
-            xState=x[0:1,0:stateSize]
-            u=x[0:1,stateSize:stateSize+inputSize]
-            p=x[0:1,stateSize+inputSize:]
-            for k in range(paraSize):
-                para_v=onp.ones((paraSize));
-                para_v[k]=p[0:1];
-                setOfVertices+=[computeAB(xState,u,para_v)]
-    
-    return K,P
-    
+plt.show()
 
 

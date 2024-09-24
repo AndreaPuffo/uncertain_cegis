@@ -1,7 +1,6 @@
 import numpy as onp
 import cvxpy as cp
 import scipy
-from verifier import verifier
 
 
 def synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertices, tau):
@@ -62,7 +61,60 @@ def synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertic
 
 
 # %%
+def synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertices, tau):
+    Qx = onp.eye(stateSize) / 1
+    R = onp.eye(inputSize) / 1  # sqrt in realtà
 
+    W = cp.Variable((stateSize, stateSize), symmetric=True)
+    X = cp.Variable((inputSize, inputSize), symmetric=True)
+    Q = cp.Variable((inputSize, stateSize))
+    gamma = cp.Variable((1, 1))
+
+    A, B = setOfVertices[0]
+    constraints = [W >> 1 * onp.eye(stateSize),
+                   W << 100 * onp.eye(stateSize),
+                   # cp.vstack([ cp.hstack([onp.eye(1),      onp.ones((stateSize,1)).T]),
+                   #             cp.hstack([onp.ones((stateSize,1)),W])
+                   #   ])>>0
+                   # cp.vstack([ cp.hstack([-X,      (R@Q)]),
+                   #             cp.hstack([(R@Q).T, -W])
+                   #   ])<<0
+                   ]
+    L = onp.diag(1 / matrixbounds.ub[:stateSize])
+    for k in range(stateSize):
+        Lr = L[k:k + 1, :]
+        print(Lr.shape)
+        constraints += [
+            cp.vstack([cp.hstack([onp.eye(1), Lr @ W]),
+                       cp.hstack([W @ Lr.T, W])]) >> 0
+        ]
+
+    for AB in setOfVertices:
+        A, B = AB
+        constraints += [
+            # cp.vstack([cp.hstack([-W+onp.eye(stateSize),      A@W+B@Q]),
+            #             cp.hstack([(A@W+B@Q).T,-W])
+            #   ])<<-1e-2
+            cp.vstack([cp.hstack([W, (A @ W + B @ Q).T, W @ Qx, Q.T @ R]),
+                       cp.hstack([(A @ W + B @ Q), W, W * 0, Q.T * 0]),
+                       cp.hstack([(W @ Qx).T, W * 0, gamma * onp.eyMastie(stateSize), Q.T * 0]),
+                       cp.hstack([(Q.T @ R).T, Q * 0, Q * 0, gamma * onp.eye(inputSize)])
+                       ]) >> 1e-2
+
+        ]
+    prob = cp.Problem(cp.Minimize(gamma / 1000), constraints)
+    prob.solve(solver='MOSEK', verbose=True)
+
+    print("The optimal value is", prob.value)
+    # print("A solution X is")
+    P = onp.linalg.inv(W.value)
+    K = (Q.value @ onp.linalg.inv(W.value))
+
+    for AB in setOfVertices:
+        A, B = AB
+        print(onp.linalg.eigvals(A + B @ K))
+        assert (onp.all(onp.abs(onp.linalg.eigvals(A + B @ K)) < 1))
+    return P, K
 
 def computeEllipsoid(Kext):
     import cvxpy as cp
