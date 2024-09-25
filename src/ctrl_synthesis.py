@@ -3,7 +3,7 @@ import cvxpy as cp
 import scipy
 
 
-def synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertices, tau):
+def synthesizeBemporadController(stateSize, inputSize, variableBounds, setOfVertices, tau):
 
     # define the optimisation variables
     Q = cp.Variable((stateSize, stateSize), symmetric=True)
@@ -16,11 +16,11 @@ def synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertic
         Zr = Z[k:k + 1, :]
         # print(Zr.shape)
         constraints += [
-            cp.vstack([cp.hstack([onp.eye(1) * (matrixbounds.ub[stateSize + k] ** 2), Zr]),
+            cp.vstack([cp.hstack([onp.eye(1) * (variableBounds.ub[stateSize + k] ** 2), Zr]),
                        cp.hstack([Zr.T, Q])]) >> 0
         ]
 
-    L = onp.diag(1 / matrixbounds.ub[:stateSize])
+    L = onp.diag(1 / variableBounds.ub[:stateSize])
     for k in range(stateSize):
         Lr = L[k:k + 1, :]
         # print(Lr.shape)
@@ -65,7 +65,7 @@ def synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertic
 
 
 # %%
-def synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertices, tau):
+def synthesizeKhotareController(stateSize, inputSize, variableBounds, setOfVertices, tau):
     Qx = onp.eye(stateSize) / 1
     R = onp.eye(inputSize) / 1  # sqrt in realtà
 
@@ -84,7 +84,7 @@ def synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertice
                    #             cp.hstack([(R@Q).T, -W])
                    #   ])<<0
                    ]
-    L = onp.diag(1 / matrixbounds.ub[:stateSize])
+    L = onp.diag(1 / variableBounds.ub[:stateSize])
     for k in range(stateSize):
         Lr = L[k:k + 1, :]
         print(Lr.shape)
@@ -121,7 +121,7 @@ def synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertice
     return P, K
 
 
-def synthesizeEllipsoidController(Kext, stateSize, inputSize, matrixbounds, setOfVertices, tau):
+def synthesizeEllipsoidController(Kext, stateSize, inputSize, variableBounds, setOfVertices, tau):
 
     Q = cp.Variable((stateSize, stateSize), symmetric=True)
     Dw = onp.eye(stateSize) * 0
@@ -134,11 +134,11 @@ def synthesizeEllipsoidController(Kext, stateSize, inputSize, matrixbounds, setO
         Zr = Z[k:k + 1, :]
         print(Zr.shape)
         constraints += [
-            cp.vstack([cp.hstack([onp.eye(1) * (matrixbounds.ub[stateSize + k] ** 2), Zr]),
+            cp.vstack([cp.hstack([onp.eye(1) * (variableBounds.ub[stateSize + k] ** 2), Zr]),
                        cp.hstack([Zr.T, Q])]) >> 0
         ]
 
-    L = onp.diag(1 / matrixbounds.ub[:stateSize])
+    L = onp.diag(1 / variableBounds.ub[:stateSize])
     for k in range(stateSize):
         Lr = L[k:k + 1, :]
         print(Lr.shape)

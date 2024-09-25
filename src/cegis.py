@@ -4,7 +4,7 @@ from ctrl_synthesis import synthesizeBemporadController, synthesizeKhotareContro
 from verifier import verifierBemporad, verifierKhotare, verifierEllipsoid
 
 
-def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
+def CegisBemporad(benchmark, computeAB, variableBounds, mask, tau=1. - 1e-4):
     import cvxpy as cp
 
     stateSize, inputSize, paraSize = benchmark.stateSize, benchmark.inputSize, benchmark.paraSize
@@ -24,10 +24,10 @@ def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
         print(f'CEGIS Iteration {itr}')
 
         # learner
-        P, K, H = synthesizeBemporadController(stateSize, inputSize, matrixbounds, setOfVertices, tau)
+        P, K, H = synthesizeBemporadController(stateSize, inputSize, variableBounds, setOfVertices, tau)
 
         # verifier
-        newVertices, found = verifierBemporad(P, K, H, computeAB, paraSize, matrixbounds, mask, tau)
+        newVertices, found = verifierBemporad(P, K, H, computeAB, paraSize, variableBounds, mask, tau)
         setOfVertices = setOfVertices + newVertices
 
         # update iteration counter
@@ -36,7 +36,7 @@ def CegisBemporad(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     return P, K
 
 
-def CegisKhotare(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
+def CegisKhotare(benchmark, computeAB, variableBounds, mask, tau=1. - 1e-4):
     from halo import HALO
 
     max_feval = 8000  # maximum number of function evaluations
@@ -63,10 +63,10 @@ def CegisKhotare(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     while not found and itr < max_cegis_iters:
 
         # learner
-        P, K = synthesizeKhotareController(stateSize, inputSize, matrixbounds, setOfVertices, tau)
+        P, K = synthesizeKhotareController(stateSize, inputSize, variableBounds, setOfVertices, tau)
 
         # verifier
-        newVertices, found = verifierKhotare(P, K, computeAB, paraSize, matrixbounds, mask, tau)
+        newVertices, found = verifierKhotare(P, K, computeAB, paraSize, variableBounds, mask, tau)
         setOfVertices = setOfVertices + newVertices
 
         # update iteration counter
@@ -75,7 +75,7 @@ def CegisKhotare(benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
     return P, K
 
 
-def CegisEllipsoid(Kext, benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4):
+def CegisEllipsoid(Kext, benchmark, computeAB, variableBounds, mask, tau=1. - 1e-4):
 
     stateSize, inputSize, paraSize = benchmark.stateSize, benchmark.inputSize, benchmark.paraSize
 
@@ -91,9 +91,9 @@ def CegisEllipsoid(Kext, benchmark, computeAB, matrixbounds, mask, tau=1. - 1e-4
     while not found and itr < max_cegis_iters:
 
         # learner
-        P, K, H = synthesizeEllipsoidController(Kext, stateSize, inputSize, matrixbounds, setOfVertices, tau)
+        P, K, H = synthesizeEllipsoidController(Kext, stateSize, inputSize, variableBounds, setOfVertices, tau)
         # verifier
-        newVertices, found = verifierEllipsoid(P, K, H, computeAB, paraSize, matrixbounds, mask, tau)
+        newVertices, found = verifierEllipsoid(P, K, H, computeAB, paraSize, variableBounds, mask, tau)
         setOfVertices = setOfVertices + newVertices
 
         # update iteration counter

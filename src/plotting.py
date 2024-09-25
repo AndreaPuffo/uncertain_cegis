@@ -36,11 +36,18 @@ def simulateController(benchmark, K, horizon, paraSize, variableBounds, label, a
         xState = onp.array(onp.reshape(xN, (1, stateSize)))
 
 
-    axes[0].title.set_text('input ' + str(label))
-    axes[0].plot(onp.array([x[1] for x in story]).reshape((-1, inputSize)))
+    state_trajectory = onp.vstack([x[0] for x in story])
+    input_trajectory = onp.vstack([x[1] for x in story])
 
-    axes[1].title.set_text('state ' + str(label))
-    axes[1].plot(onp.array([x[0] for x in story]).reshape((-1, stateSize)))
+    axes[0].title.set_text('Input ' + str(label))
+    axes[0].plot(input_trajectory)
+    axes[0].set_xlabel('Time Steps')
+    axes[0].grid()
+
+    axes[1].title.set_text('State ' + str(label))
+    axes[1].plot(state_trajectory[:, :2])
+    axes[1].set_xlabel('Time Steps')
+    axes[1].grid()
 
 
 def plotEllipse(Q, colorString, label):

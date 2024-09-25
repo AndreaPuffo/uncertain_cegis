@@ -2,7 +2,7 @@ import numpy as onp
 import scipy
 
 
-def verifierBemporad(P, K, H, computeAB, paraSize, matrixbounds, mask, tau):
+def verifierBemporad(P, K, H, computeAB, paraSize, variableBounds, mask, tau):
 
     valid = False
     newVertices = []
@@ -12,9 +12,9 @@ def verifierBemporad(P, K, H, computeAB, paraSize, matrixbounds, mask, tau):
 
     # todo: can we not simply check A+BK?
     costEig = lambda x: costEigPKBemporad(x, Q, K, H, computeAB, paraSize, mask, tau)
-    b = scipy.optimize.Bounds(mask.T @ matrixbounds.lb, mask.T @ matrixbounds.ub)
+    b = scipy.optimize.Bounds(mask.T @ variableBounds.lb, mask.T @ variableBounds.ub)
     # res=scipy.optimize.direct(costEig,bounds=b,locally_biased=True)
-    res = scipy.optimize.shgo(costEig, bounds=b, options={"f_tol": 1e-6})
+    res = scipy.optimize.shgo(costEig, bounds=b, options={"f_tol": 1e-9})
     # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds)
     # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
     # result=halo.minimize();
@@ -22,7 +22,7 @@ def verifierBemporad(P, K, H, computeAB, paraSize, matrixbounds, mask, tau):
     # break
     print("Verifier says: ", result['best_f'])
     # todo: is this correct? should it be >= +1e-9?
-    if result['best_f'] >= -1e-9:
+    if result['best_f'] >= 1e-15:
         valid = True
     else:
         x = result['best_x']
@@ -80,7 +80,7 @@ def costEigPKBemporad(x, Q, K, H, computeAB, paraSize, mask, tau):
 
     return v
 
-def verifierKhotare(P, K, computeAB, paraSize, matrixbounds, mask, tau):
+def verifierKhotare(P, K, computeAB, paraSize, variableBounds, mask, tau):
 
     valid = False
     newVertices = []
@@ -89,7 +89,7 @@ def verifierKhotare(P, K, computeAB, paraSize, matrixbounds, mask, tau):
 
     costEig = lambda x: costEigPKhotare(x, P, K, computeAB, paraSize, mask, tau)
 
-    res = scipy.optimize.direct(costEig, bounds=matrixbounds, locally_biased=True)
+    res = scipy.optimize.direct(costEig, bounds=variableBounds, locally_biased=True)
     # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds)
     # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
     # result=halo.minimize();
@@ -134,7 +134,7 @@ def costEigPKhotare(x, P, K, computeAB, paraSize, mask, tau):
     return v
 
 
-def verifierEllipsoid(P, K, H, computeAB, paraSize, matrixbounds, mask, tau):
+def verifierEllipsoid(P, K, H, computeAB, paraSize, variableBounds, mask, tau):
 
     valid = False
     newVertices = []
@@ -143,7 +143,7 @@ def verifierEllipsoid(P, K, H, computeAB, paraSize, matrixbounds, mask, tau):
 
     Q = onp.linalg.inv(P)
     costEig = lambda x: costEigPKEllipsoid(x, Q, K, H)
-    b = scipy.optimize.Bounds(mask.T @ matrixbounds.lb, mask.T @ matrixbounds.ub)
+    b = scipy.optimize.Bounds(mask.T @ variableBounds.lb, mask.T @ variableBounds.ub)
     res = scipy.optimize.direct(costEig, bounds=b, locally_biased=True)
     # res=scipy.optimize.minimize(costEig,res.x,vbounds=Bounds)
     # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)

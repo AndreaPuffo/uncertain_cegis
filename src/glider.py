@@ -1,3 +1,5 @@
+import timeit
+
 import jax
 jax.config.update("jax_enable_x64", True)
 import sys
@@ -51,7 +53,10 @@ computeAB=lambda x,u,p: [jacA(x,u,p).reshape((stateSize,stateSize)),jacB(x,u,p).
 #%%
 tau=1-0.001
 # compute the P and K matrix via CEGIS
-Psat,Ksat = CegisBemporad(benchmark=system, computeAB=computeAB, matrixbounds=Bounds, mask=mask, tau=tau)
+start_cegis = timeit.default_timer()
+Psat,Ksat = CegisBemporad(benchmark=system, computeAB=computeAB, variableBounds=Bounds, mask=mask, tau=tau)
+end_cegis = timeit.default_timer()
+print(f'Elapsed time for CEGIS loop: {end_cegis-start_cegis}')
 
 #%%
 P=Psat*1
@@ -71,7 +76,7 @@ Kinf=-K_Hinf1
 # plt.figure()
 fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
 simulateController(system, Ksat, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
-                   label='K sat', axes=[ax1,ax2])
+                   label='CEGIS', axes=[ax1,ax2])
 # plt.figure()
 if benchamark_id==6:
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
@@ -87,20 +92,20 @@ if benchamark_id==6:
 
 
 #%%
-
+simulation_horizon = 10000
 if benchamark_id==5:
     PH2, KH2 = controllerH2(stateSize, inputSize, paraSize, computeAB)
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(system, KH2, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
-                       label=r'$H_{2}$ from 2', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
+    simulateController(system, KH2, horizon=simulation_horizon, paraSize=paraSize, variableBounds=Bounds,
+                       label=r'$H_{2}$, $x_0=2$', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
 
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(system, KH2, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
+    simulateController(system, KH2, horizon=simulation_horizon, paraSize=paraSize, variableBounds=Bounds,
                        label=r'$H_{2}$ from 0', axes=[ax1,ax2])
 
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(system, Ksat, horizon=35000, paraSize=paraSize, variableBounds=Bounds,
-                       label=r'Bemporad $K_{sat}$ from 2', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
+    simulateController(system, Ksat, horizon=simulation_horizon, paraSize=paraSize, variableBounds=Bounds,
+                       label=r'CEGIS $x_0=2$', axes=[ax1,ax2], x0=2*onp.ones((1,stateSize)))
     # PKH2=computeEllipsoid(KH2)
 
 #%%
