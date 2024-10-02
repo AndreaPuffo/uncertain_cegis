@@ -216,7 +216,7 @@ class AUV(BaseBenchmark):
         super().__init__(0.02,enableNoise)
         
         global stateSize
-        assert stateSize==5
+        assert stateSize==4
         global inputSize
         assert inputSize==4
         global paraSize
@@ -483,13 +483,76 @@ def Bemporad():
                 setOfVertices+=[computeAB(xState,u,para_v)]
     return P,K
     
+    P,K,H=synthesizeController()
     
+    
+    
+    
+    def costEigPK(x,Q,K,H):
+        x=onp.reshape(x, (1,stateSize+inputSize+1))
+        # A,B=approximateOnPointJAC(x,nbrs)
+        xState=x[0:1,0:stateSize]
+        u=x[0:1,stateSize:stateSize+inputSize]
+        p=x[0:1,stateSize+inputSize:]
+        # xTT=system.forward(u,xState,p)
+        # overallDataset+=[(xState.T,u[0],xTT,computeAB(xState.T,u))]
+        v=onp.Inf;
+        
+        Y=K@Q
+        Z=H@Q
+        Es=[]         
+        
+        Dw=onp.eye( stateSize)*0
+        combinations=int(2**inputSize)
+        for j in range(combinations):
+            Es += [onp.diag([int(b) for b in onp.binary_repr(j, inputSize)])]
+        
+        constraints=[]
+        for k in range(paraSize):
+            para_v=onp.ones((paraSize,1));
+            para_v[k]=p[0:1];
+            A,B=computeAB(xState.T,u,para_v)            
+            for Ej in Es:           
+                ACL=(A@Q+B@Ej@Y+B@(onp.eye(inputSize)-Ej)@Z)
+                cond =onp.vstack([onp.hstack([(tau)*Q,      Q*0,ACL.T]),
+                                onp.hstack([Q*0,      onp.eye(stateSize)*(1-tau),Dw]),
+                                onp.hstack([ACL, Dw.T, Q]),])
+                # print(constraints[-1].shape)
+                # cond=scipy.linalg.block_diag(constraints)
+                eig=scipy.sparse.linalg.eigsh(cond,1,which='SA',return_eigenvectors=False)
+                # print(eig)
+                v=min(min(onp.real(eig)),v)
+                
+        return v
+    Q=onp.linalg.inv(P)
+    costEig=lambda x: costEigPK(x,Q,K,H)
+    
+    res=scipy.optimize.direct(costEig,bounds=Bounds,locally_biased=True,vol_tol=1e-8,len_tol=1e-3   ) 
+    # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds) 
+    # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
+    # result=halo.minimize();
+    result={'best_f':res.fun,'best_x':res.x}
+    # break
+    print(result['best_f'])
+    if result['best_f']>=0:
+        break
+    else:
+        x=result['best_x']
+        x=onp.reshape(x, (1,stateSize+inputSize+1))
+        xState=x[0:1,0:stateSize]
+        u=x[0:1,stateSize:stateSize+inputSize]
+        p=x[0:1,stateSize+inputSize:]
+        for k in range(paraSize):
+            para_v=onp.ones((paraSize));
+            para_v[k]=p[0:1];
+            setOfVertices+=[computeAB(xState,u,para_v)]
 
 #%%
 
 
 def computeEllipsoid(Kext):
     import cvxpy as cp
+    from halo import HALO
     
     x=onp.zeros((stateSize))+1;
     u=onp.zeros((inputSize))+1
@@ -507,6 +570,10 @@ def computeEllipsoid(Kext):
             Y=cp.Variable((inputSize,stateSize))
             Z=cp.Variable((inputSize,stateSize))        
             
+            W=cp.Variable((stateSize,stateSize), symmetric=True)
+            X=cp.Variable((inputSize,inputSize), symmetric=True)
+            Q=cp.Variable((inputSize,stateSize))
+            gamma=cp.Variable((1,1))
             
             # print((Q@Kext).shape)
             constraints = [Kext@Q==Y  ]
