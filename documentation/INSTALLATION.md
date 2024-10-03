@@ -17,6 +17,8 @@ pip3 install cvxpy
 pip3 install -r ./requirements.txt  
 ```
   
+TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
+   
 Move to step 2).
 
 
@@ -27,7 +29,9 @@ If [Anaconda](https://docs.anaconda.com/free/anaconda/install/) is installed on 
 conda env create -f documentation/environment_unc_cegis.yml
 conda activate env_unc_cegis
 ```
-
+  
+TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
+   
 (use `conda deactivate` upon completion.)
 
 Move to step 2).
@@ -44,7 +48,9 @@ source unc_cegis_venv/bin/activate
 python -V
 pip3 install -r documentation/requirements.txt  
 ```
-  
+    
+TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
+   
 (use `deactivate` upon completion.)
 
 Move to step 2).
@@ -56,4 +62,6 @@ These commands will run the training for the *nonlinear AUV* system:
 cd uncertain_cegis/code
 python3 main_poly_auv_disjunction.py  
 ```
-
+  
+TODO: update new main.    
+   
