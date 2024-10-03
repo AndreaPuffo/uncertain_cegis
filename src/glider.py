@@ -216,7 +216,7 @@ class AUV(BaseBenchmark):
         super().__init__(0.02,enableNoise)
         
         global stateSize
-        assert stateSize==4
+        assert stateSize==5  #TODO patch: with the newly added integrator is should be 5 states 
         global inputSize
         assert inputSize==4
         global paraSize
@@ -535,7 +535,8 @@ def Bemporad():
     # break
     print(result['best_f'])
     if result['best_f']>=0:
-        break
+        #break
+        print("TODO patch: code to fix here")
     else:
         x=result['best_x']
         x=onp.reshape(x, (1,stateSize+inputSize+1))
