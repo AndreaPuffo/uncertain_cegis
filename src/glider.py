@@ -14,7 +14,7 @@ import numpy.matlib
 import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
-
+import time
 
 plt.rcParams.update({
     "text.usetex": True,
