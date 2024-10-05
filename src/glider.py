@@ -14,6 +14,16 @@ import numpy.matlib
 import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
+
+
+plt.rcParams.update({
+    "text.usetex": True,
+})
+
+plt.rcParams['mathtext.fontset'] = 'stix'
+plt.rcParams['font.family'] = 'STIXGeneral'
+plt.rcParams['font.size'] = '14'
+plt.tight_layout()
 #%%
 class BaseBenchmark:
     def __init__(self,noiseCov=None,enableNoise=True):
@@ -216,7 +226,7 @@ class AUV(BaseBenchmark):
         super().__init__(0.02,enableNoise)
         
         global stateSize
-        assert stateSize==4
+        assert stateSize==5
         global inputSize
         assert inputSize==4
         global paraSize
@@ -363,7 +373,7 @@ def Bemporad():
             
             
             
-            constraints = [  ]
+            constraints = [Q<<50*onp.eye(stateSize)  ]
             for k in range(inputSize):
                 Zr=Z[k:k+1,:]
                 # print(Zr.shape)
@@ -376,10 +386,11 @@ def Bemporad():
             for k in range(stateSize):
                 Lr=L[k:k+1,:]
                 # print(Lr.shape)
-                constraints+=[                
-                    cp.vstack([cp.hstack([onp.eye(1),   Lr@Q]),
-                                cp.hstack([ Q@Lr.T,     Q])])>>0
-                    ]
+                if (onp.diag(mask)[k]>0.9):
+                    constraints+=[                
+                        cp.vstack([cp.hstack([onp.eye(1),   Lr@Q]),
+                                    cp.hstack([ Q@Lr.T,     Q])])>>0
+                        ]
                 
             
             
@@ -412,6 +423,7 @@ def Bemporad():
                 print(onp.linalg.eigvals(A+B@K))
                 assert(onp.all(onp.abs(onp.linalg.eigvals(A+B@K))<1))
             return P,K,H
+        
         
         P,K,H=synthesizeController()
         
@@ -468,7 +480,7 @@ def Bemporad():
         result={'best_f':res.fun,'best_x':res.x}
         # break
         print("veryfier says: ",result['best_f'])
-        if result['best_f']>=-1e-9:
+        if result['best_f']>=-1e-9*0:
             break
         else:
             x=result['best_x']
@@ -481,78 +493,15 @@ def Bemporad():
                 para_v=onp.ones((paraSize));
                 para_v[k]=p[0:1];
                 setOfVertices+=[computeAB(xState,u,para_v)]
-    return P,K
-    
-    P,K,H=synthesizeController()
+    return P,K,len(setOfVertices)
     
     
-    
-    
-    def costEigPK(x,Q,K,H):
-        x=onp.reshape(x, (1,stateSize+inputSize+1))
-        # A,B=approximateOnPointJAC(x,nbrs)
-        xState=x[0:1,0:stateSize]
-        u=x[0:1,stateSize:stateSize+inputSize]
-        p=x[0:1,stateSize+inputSize:]
-        # xTT=system.forward(u,xState,p)
-        # overallDataset+=[(xState.T,u[0],xTT,computeAB(xState.T,u))]
-        v=onp.Inf;
-        
-        Y=K@Q
-        Z=H@Q
-        Es=[]         
-        
-        Dw=onp.eye( stateSize)*0
-        combinations=int(2**inputSize)
-        for j in range(combinations):
-            Es += [onp.diag([int(b) for b in onp.binary_repr(j, inputSize)])]
-        
-        constraints=[]
-        for k in range(paraSize):
-            para_v=onp.ones((paraSize,1));
-            para_v[k]=p[0:1];
-            A,B=computeAB(xState.T,u,para_v)            
-            for Ej in Es:           
-                ACL=(A@Q+B@Ej@Y+B@(onp.eye(inputSize)-Ej)@Z)
-                cond =onp.vstack([onp.hstack([(tau)*Q,      Q*0,ACL.T]),
-                                onp.hstack([Q*0,      onp.eye(stateSize)*(1-tau),Dw]),
-                                onp.hstack([ACL, Dw.T, Q]),])
-                # print(constraints[-1].shape)
-                # cond=scipy.linalg.block_diag(constraints)
-                eig=scipy.sparse.linalg.eigsh(cond,1,which='SA',return_eigenvectors=False)
-                # print(eig)
-                v=min(min(onp.real(eig)),v)
-                
-        return v
-    Q=onp.linalg.inv(P)
-    costEig=lambda x: costEigPK(x,Q,K,H)
-    
-    res=scipy.optimize.direct(costEig,bounds=Bounds,locally_biased=True,vol_tol=1e-8,len_tol=1e-3   ) 
-    # res=scipy.optimize.minimize(costEig,res.x,bounds=Bounds) 
-    # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
-    # result=halo.minimize();
-    result={'best_f':res.fun,'best_x':res.x}
-    # break
-    print(result['best_f'])
-    if result['best_f']>=0:
-        break
-    else:
-        x=result['best_x']
-        x=onp.reshape(x, (1,stateSize+inputSize+1))
-        xState=x[0:1,0:stateSize]
-        u=x[0:1,stateSize:stateSize+inputSize]
-        p=x[0:1,stateSize+inputSize:]
-        for k in range(paraSize):
-            para_v=onp.ones((paraSize));
-            para_v[k]=p[0:1];
-            setOfVertices+=[computeAB(xState,u,para_v)]
 
 #%%
 
 
 def computeEllipsoid(Kext):
     import cvxpy as cp
-    from halo import HALO
     
     x=onp.zeros((stateSize))+1;
     u=onp.zeros((inputSize))+1
@@ -570,12 +519,9 @@ def computeEllipsoid(Kext):
             Y=cp.Variable((inputSize,stateSize))
             Z=cp.Variable((inputSize,stateSize))        
             
-            W=cp.Variable((stateSize,stateSize), symmetric=True)
-            X=cp.Variable((inputSize,inputSize), symmetric=True)
-            Q=cp.Variable((inputSize,stateSize))
-            gamma=cp.Variable((1,1))
             
             # print((Q@Kext).shape)
+            #Y.reshape((-1,1))>=-1e3, Y.reshape((-1,1))<=1e3,Z.reshape((-1,1))>=-1e3, Z.reshape((-1,1))<=1e3
             constraints = [Kext@Q==Y  ]
             for k in range(inputSize):
                 Zr=Z[k:k+1,:]
@@ -702,7 +648,7 @@ def computeEllipsoid(Kext):
 
 #%%
 
-Psat,Ksat=Bemporad()
+Psat,Ksat,numVertPsat=Bemporad()
 
 #%%
 P=Psat*1
@@ -715,19 +661,20 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
                        [183.4074, -219.4158],
                        [-0.0298, -776.4082]])
 
-Kinf=-K_Hinf2
+Kinf=-K_Hinf1
 
 #%%
-def simulateController(K,label,ax1,ax2,x0=None):
+def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,numStatesToPrint=stateSize,haveFault=True):
     story=[]
     if x0 is None:
         xState=onp.zeros((1,stateSize))
-        xState[0,0]=0
-        xState[0,1]=0
+        xState[0,0]=1.82*0
+        xState[0,1]=-0.2*0
     else:
         xState=onp.reshape(x0,(1,stateSize))
     p=onp.ones((1,paraSize))
-    for k in range(0,35000):
+    tStart=time.time()
+    for k in range(0,10000):
         ref=onp.array(xState*0)
         ref[0,0]=onp.cos(k/1000)/5+0.5
         ref[0,1]=onp.cos((600+k)/1000)/5
@@ -738,40 +685,59 @@ def simulateController(K,label,ax1,ax2,x0=None):
         
         xN=system.innerDynamic(xState,uF,p)
         p=onp.ones((1,paraSize))
-        if k>=3000 and k<=4000:
+        if k>=3000 and k<4000 and haveFault:
             p[0,2]=.1
-        if k>=5000:
+        elif k>=4000 and haveFault:
             p[0,1]=.1
         else:
             pass
-        story+=[(xState,uF)]
+        story+=[(xState,uF,ref)]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
         # print(xState)
     
-        
+    timeStaticFeedback=time.time()-tStart
     import matplotlib.pyplot as plt
     
     ax1.title.set_text('input '+str(label))
     ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
     
     ax2.title.set_text('state '+str(label))
-    ax2.plot(onp.array([x[0] for x in story]).reshape((-1,stateSize)))
-    
+    # label=None
+    if plotlabel:
+        label=[str(label)+"- "+"$x_{}$".format(i) for i in range(0,numStatesToPrint)]
+    ax2.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=label)
+    if printref:
+        ax2.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='--',
+                 label=["ref $x_{}$".format(i) for i in range(0,numStatesToPrint)])
+    if plotlabel:
+        ax2.legend(loc='lower right')
+    return timeStaticFeedback
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
-fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-simulateController(Ksat,'K sat',ax1,ax2)
+
+
 # plt.figure()
 if benchamark_id==6:
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(Kinf,'$H_{inf}$',ax1,ax2)
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    plt.tight_layout()
+    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=True)
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}_{\infty}$ aggressive',ax1,ax2)
+    plt.tight_layout()
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    # simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2)
+    plt.tight_layout()
 
     #%%
-    PKinf=computeEllipsoid(Kinf)
+    PKinf2=computeEllipsoid(-K_Hinf2)
+    PKinf1=computeEllipsoid(-K_Hinf1)
     import numpy as np
     #%%
-    plt.figure()
+    
     
     # Define the symmetric matrix Q
     def printEllipse(Q,colorString,label):
@@ -790,14 +756,18 @@ if benchamark_id==6:
                 Z[i, j] = vec.T@Q@vec
                 
         contour=plt.contour(X, Y, Z, levels=[1], colors=colorString)
-        plt.xlabel('x1')
-        plt.ylabel('x2')
-        plt.title('Contour plot of $x^T Q x = 1$')
+        plt.xlabel('$x_1$')
+        plt.ylabel('$x_2$')
+        plt.title('Contour plot of $x^T Q^{-1} x = 1$')
         # plt.gca().set_aspect('equal', adjustable='box')
         plt.clabel(contour,contour.levels,fmt= lambda x: str(label))
         # plt.colorbar(contour)
-    printEllipse(Psat,'b','Psat')
-    printEllipse(PKinf[0],'r','$H_{inf}$')
+        #%%
+    plt.figure(dpi=160)
+    printEllipse(Psat,'b','$K_\mathrm{sat}$')
+    
+    printEllipse(PKinf1[0],'g','$\mathcal{H}^c_{\infty}$')
+    printEllipse(PKinf2[0],'r','$\mathcal{H}^a_{\infty}$')
     plt.show()
 
 
@@ -850,32 +820,48 @@ def H2():
     
     return P,K
 if benchamark_id==5:
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3.5) 
+    
+    simulateController(Ksat,'$K_\mathrm{sat}$ from $x=0$',ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=False)
+    plt.tight_layout()
     PH2,KH2=H2()
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(KH2,'$H_{2} from 2 $',ax1,ax2,2*onp.ones((1,stateSize)))
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(KH2,'$H_{2}$ from 0',ax1,ax2)
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
-    simulateController(Ksat,'$K sat from 2$ from 0',ax1,ax2,2*onp.ones((1,stateSize)))
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3.5) 
+    simulateController(KH2,'$H_{2}$ from $x=2$ ',ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False)
+    plt.tight_layout()
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3.5) 
+    simulateController(KH2,'$H_{2}$ from $x=0$',ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=False)
+    plt.tight_layout()
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3.5) 
+    simulateController(Ksat,'$K$ sat from $x=2$',ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False)
+    plt.tight_layout()
     # PKH2=computeEllipsoid(KH2)
 
 
 
 #%%
-def MPCsim(x0=None,label="MPC"):
-    #%%
+def MPCsim(x0=None,label="MPC -"):
+    
     from jax import jit
-    horizon=7
+    horizon=20
     @jit
     def costFun(uG,x0,ref):
         x0S=jnp.reshape(x0*1,(1,stateSize))
-        error=jnp.sum(jnp.ravel(uG)**2)/1000
+        error=0
         # horizon=7
         p=jnp.ones((1,paraSize))
         uF=jnp.reshape(uG,(horizon,inputSize))
         for r in range(0,horizon):
             x0SN=system.innerDynamic(x0S,uF[r,:],p)
-            error+=jnp.sum(jnp.square(x0SN-ref))
+            error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
+            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/10000
             x0S=x0SN*1
         return error
             
@@ -891,46 +877,56 @@ def MPCsim(x0=None,label="MPC"):
     p=jnp.ones((1,paraSize))
     b=scipy.optimize.Bounds(onp.repeat(Bounds.lb[stateSize:stateSize+inputSize],horizon),
                             onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
-    for k in range(0,35000):
+    conGra=jax.jit(jax.grad(costFun))
+    tStart=time.time()
+    for k in range(0,10000):
         ref=onp.array(xState*0)
         ref[0,0]=onp.cos(k/1000)/5+0.5
         ref[0,1]=onp.cos((600+k)/1000)/5
         # err=
         # xState[0,-1]+=-.1
         
-        lcost= (lambda u: costFun(u,jnp.array(xState*1),jnp.array(ref)))
+        lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
         uG=jnp.repeat(jnp.array(Ksat@(xState-ref).T),horizon,1).T.ravel()
-        res=scipy.optimize.minimize(lcost,uG,bounds=b,method='SLSQP',options={'maxiter':3})
+        res=scipy.optimize.minimize(lcost,uG,bounds=b,jac=True)
         # uF=onp.array(K@(xState-ref).T).ravel()
-        uF=onp.reshape(res.x[0:inputSize], (inputSize))
+        uF=onp.reshape(res.x,(horizon,inputSize))
+        uF=uF[0,:]
         xN=system.innerDynamic(xState,uF,p)
         p=onp.ones((1,paraSize))
-        if k>=3000 and k<=4000:
+        if k>=3000 and k<4000:
             p[0,2]=.1
-        if k>=5000:
+        if k>=4000:
             p[0,1]=.1
         else:
             pass
         story+=[(onp.array(xState),onp.array(uF))]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
-        print(k,xState)
-    
+        # print(k,xState)
+    timeMPC=time.time()-tStart
         
     import matplotlib.pyplot as plt
-    
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False)
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3.5) 
     ax1.title.set_text('input '+str(label))
     ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
-    
     ax2.title.set_text('state '+str(label))
-    ax2.plot(onp.array([x[0] for x in story]).reshape((-1,stateSize)))
-
+    label=[str(label)+"- "+"$x_{}$".format(i) for i in range(0,stateSize-1)]
+    ax2.plot(onp.array([x[0].ravel()[0:stateSize-1] for x in story]).reshape((-1,stateSize-1)),label=label)
+    plt.tight_layout()
+    return ax1,ax2,timeMPC
+    
+    
 import time
-tStart=time.time()
-MPCsim()   
-timeMPC=time.time()-tStart
-print(timeMPC)
+
+ax1,ax2,timeMPC=MPCsim()
+timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
+                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True)
+plt.tight_layout()
+
+
+print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
 # #%%
 # def Khotare():
 #     pass
