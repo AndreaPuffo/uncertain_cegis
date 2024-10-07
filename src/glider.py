@@ -664,7 +664,7 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
 Kinf=-K_Hinf1
 
 #%%
-def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,numStatesToPrint=stateSize,haveFault=True):
+def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False):
     story=[]
     if x0 is None:
         xState=onp.zeros((1,stateSize))
@@ -674,10 +674,13 @@ def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,nu
         xState=onp.reshape(x0,(1,stateSize))
     p=onp.ones((1,paraSize))
     tStart=time.time()
+    sineTrackMult=0
+    if sineTrack:
+        sineTrackMult=1
     for k in range(0,10000):
         ref=onp.array(xState*0)
-        ref[0,0]=onp.cos(k/1000)/5+0.5
-        ref[0,1]=onp.cos((600+k)/1000)/5
+        ref[0,0]=sineTrackMult*onp.cos(k/1000)/5+0.5
+        ref[0,1]=sineTrackMult*onp.cos((600+k)/1000)/5
         # err=
         # xState[0,-1]+=-.1
         uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
@@ -723,13 +726,26 @@ if benchamark_id==6:
     fig.set_size_inches(7, 3) 
     plt.tight_layout()
     simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=True)
-    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     fig.set_size_inches(7, 3) 
     simulateController(-K_Hinf2,'$\mathcal{H}_{\infty}$ aggressive',ax1,ax2)
     plt.tight_layout()
-    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     fig.set_size_inches(7, 3) 
-    # simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2)
+    simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2)
+    plt.tight_layout()
+    
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    plt.tight_layout()
+    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=True,sineTrack=True)
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}_{\infty}$ aggressive',ax1,ax2,sineTrack=True)
+    plt.tight_layout()
+    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2,sineTrack=True)
     plt.tight_layout()
 
     #%%
@@ -888,7 +904,7 @@ def MPCsim(x0=None,label="MPC -"):
         
         lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
         uG=jnp.repeat(jnp.array(Ksat@(xState-ref).T),horizon,1).T.ravel()
-        res=scipy.optimize.minimize(lcost,uG,bounds=b,jac=True)
+        res=scipy.optimize.minimize(lcost,uG,bounds=b,jac=True, method='L-BFGS-B')
         # uF=onp.array(K@(xState-ref).T).ravel()
         uF=onp.reshape(res.x,(horizon,inputSize))
         uF=uF[0,:]
@@ -903,7 +919,7 @@ def MPCsim(x0=None,label="MPC -"):
         story+=[(onp.array(xState),onp.array(uF))]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
-        # print(k,xState)
+        print('.',end='')
     timeMPC=time.time()-tStart
         
     import matplotlib.pyplot as plt
