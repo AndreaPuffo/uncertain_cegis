@@ -35,7 +35,7 @@ class BaseBenchmark:
             print('overwritten noise cov:',noiseCov)
         pass
 
-    def innerDynamic(x0,uT,p):
+    def innerDynamic(x0,uT,p,intgralTermRef):
         pass
     
         
@@ -167,7 +167,7 @@ class twoStateAUV(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT,para):
+    def innerDynamic(self,xT, uT,para,intgralTermRef=0):
         xT=xT.reshape((stateSize,1))
         uT=uT.reshape((inputSize))
         para=para.reshape((paraSize))
@@ -235,7 +235,7 @@ class AUV(BaseBenchmark):
         pass
     
     @partial(jax.jit, static_argnums=(0,))
-    def innerDynamic(self,xT, uT,para):
+    def innerDynamic(self,xT, uT,para,intgralTermRef=0):
         xT=xT.reshape((stateSize,1))
         uT=uT.reshape((inputSize))
         para=para.reshape((paraSize))
@@ -284,7 +284,7 @@ class AUV(BaseBenchmark):
         x3dot=1/Jz*(-Nr*xT[2]-Nrr*xT[2]**2+h1*(-F1_x*l1y+F1_y*l1x)+
                      h2*(-F2_x*l2y+F2_y*l2x)+h3*(-F3_x*l3y+F3_y*l3x)+h4*(-F4_x*l4y+F4_y*l4x))
         x4dot=xT[2]
-        x5dot=xT[3]-0.2
+        x5dot=xT[3]-jnp.asarray(intgralTermRef).ravel()[0]
         
         Ts=.01
         xN=jnp.zeros((stateSize,1))        
@@ -324,7 +324,7 @@ class squaredTank(BaseBenchmark):
     
 
 import sys
-benchamark_id= 5
+benchamark_id=5
 b=2
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -350,7 +350,21 @@ jacB=jax.jit(jax.jacobian(system.innerDynamic,argnums=1))
 
 computeAB=lambda x,u,p: [jacA(x,u,p).reshape((stateSize,stateSize)),jacB(x,u,p).reshape((stateSize,inputSize))]
 
+def generateFault(k,mult):
+    p=onp.ones((1,paraSize))
+    if k>=4000*mult and k<8000*mult:
+        p[0,2]=.1
+    elif k>=8000*mult:
+        p[0,1]=.1
+    else:
+        pass
+    return p
 
+def generateRef(k,sineTrackMult):
+    ref=onp.zeros((1,stateSize))
+    ref[0,0]=sineTrackMult*onp.cos(k/1000)/5+0.5
+    ref[0,1]=sineTrackMult*onp.cos((600+k)/1000)/5
+    return ref
 #%%
 tau=1-0.001
 def Bemporad():
@@ -650,9 +664,7 @@ def computeEllipsoid(Kext):
 
 Psat,Ksat,numVertPsat=Bemporad()
 
-#%%
-P=Psat*1
-K=Ksat*1
+
 #%%
 K_Hinf2= 1.0e+04*onp.array([[0.2400,    0.2865],
                          [0.2553,   -0.3037],
@@ -661,15 +673,46 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
                        [183.4074, -219.4158],
                        [-0.0298, -776.4082]])
 
-Kinf=-K_Hinf1
+# Kinf=-K_Hinf1
 
 #%%
-def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False):
+
+def simForMC(x0,p,K,lenSim=500):
+    xState=onp.reshape(x0,(1,stateSize))
+    p=onp.reshape(p,(1,paraSize))
+    ref=onp.array(xState*0)
+    for k in range(0,lenSim):       
+        uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])        
+        xN=system.innerDynamic(xState,uF,p)
+        xState=onp.array(onp.reshape(xN,(1,stateSize)))
+        
+    return xState
+story=[]
+if benchamark_id==6:
+    for k in range(0,800):
+        comp=onp.random.randint(0,paraSize);
+        val=onp.random.uniform(0,1);
+        x0=onp.random.uniform(Bounds.lb[0:stateSize],Bounds.ub[0:stateSize]);
+        p=onp.ones((paraSize));
+        p[comp]=val
+        xEnd=simForMC(x0,p,-K_Hinf2)
+        story+=[(x0,p,xEnd)]
+        print('.',end='')
+    #%%
+contracted=[x for x in story if onp.linalg.norm(x[-1])<0.1*onp.linalg.norm(x[0])]
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+for xp in contracted:    
+    ax.scatter(xp[0][0], xp[0][1], xp[1])
+#%%
+def simulateController(K,labelTitle,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
+                       plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
     story=[]
+    
     if x0 is None:
         xState=onp.zeros((1,stateSize))
-        xState[0,0]=1.82*0
-        xState[0,1]=-0.2*0
+        # xState[0,0]=-0.3
+        # xState[0,1]=0.2
     else:
         xState=onp.reshape(x0,(1,stateSize))
     p=onp.ones((1,paraSize))
@@ -677,44 +720,75 @@ def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,nu
     sineTrackMult=0
     if sineTrack:
         sineTrackMult=1
-    for k in range(0,10000):
-        ref=onp.array(xState*0)
-        ref[0,0]=sineTrackMult*onp.cos(k/1000)/5+0.5
-        ref[0,1]=sineTrackMult*onp.cos((600+k)/1000)/5
+    for k in range(0,int(12000*mult)):
+
+        ref=generateRef(k,sineTrackMult)
         # err=
         # xState[0,-1]+=-.1
         uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
         # uF=onp.array(K@(xState-ref).T).ravel()
         
-        xN=system.innerDynamic(xState,uF,p)
+        xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
         p=onp.ones((1,paraSize))
-        if k>=3000 and k<4000 and haveFault:
-            p[0,2]=.1
-        elif k>=4000 and haveFault:
-            p[0,1]=.1
+        if haveFault:
+            p=generateFault(k,mult)
+            
+        ref[0,-2]=integralTermToTrack*1
+            
+        if plotError:
+            
+            story+=[(onp.linalg.norm(xState[0,0:numStatesToPrint]-ref[0,0:numStatesToPrint]),uF,p*1,ref)]
         else:
-            pass
-        story+=[(xState,uF,ref)]
+            story+=[(xState,uF,p*1,ref)]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
         # print(xState)
-    
+    if onlySim:
+        return xState,story
     timeStaticFeedback=time.time()-tStart
-    import matplotlib.pyplot as plt
+    from cycler import cycler
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
+    ax1.set_prop_cycle(mycycler)
+    ax1.title.set_text('control signal' )
     
-    ax1.title.set_text('input '+str(label))
-    ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
-    
-    ax2.title.set_text('state '+str(label))
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:numStatesToPrint]))
+    ax2.set_prop_cycle(mycycler)
+    if plotError:
+        ax2.title.set_text('tracking error')
+    else:
+        ax2.title.set_text('state')
     # label=None
-    if plotlabel:
-        label=[str(label)+"- "+"$x_{}$".format(i) for i in range(0,numStatesToPrint)]
-    ax2.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=label)
-    if printref:
-        ax2.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='--',
-                 label=["ref $x_{}$".format(i) for i in range(0,numStatesToPrint)])
+    
+    labelU=[labelTitle if i==0 else None for i in range(0,inputSize)  ]
+    labelX=[labelTitle+" - "+"$x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelX=[labelTitle if i==0 else None for i   in range(0,numStatesToPrint)]
+    labelR=["ref $x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
+    
+    
+    # else:
+    ax1.plot(onp.array([x[1].ravel() for x in story]).reshape((-1,inputSize)),ls=style,label=labelU)
+    if plotLog:
+        # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
+        ax2.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
+    else:
+        ax2.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=labelX[0:len(story[0])],ls=style)
+    
+    if printref and not(plotLog):
+        ax2.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='solid',
+                 label=labelR)
+        
+    mask=[0]+[i  for i in range(1,len(story)) if not(onp.allclose(story[i-1][2],story[i][2]))]+[len(story)]
+    color=['white','yellow','greenyellow','yellow','white','yellow','white','yellow']
+    print(mask)
+    if haveFault:
+        for k in range(0,len(mask)-1):
+            ax1.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
+            ax2.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
     if plotlabel:
         ax2.legend(loc='lower right')
+        # ax1.legend(loc='lower right')
+        pass
     return timeStaticFeedback
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
@@ -722,30 +796,32 @@ def simulateController(K,label,ax1,ax2,x0=None,printref=False,plotlabel=False,nu
 
 # plt.figure()
 if benchamark_id==6:
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3) 
-    plt.tight_layout()
-    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=True)
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf2,'$\mathcal{H}_{\infty}$ aggressive',ax1,ax2)
-    plt.tight_layout()
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2)
+    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+    fig.set_size_inches(6, 10) 
+    # plt.tight_layout()
+    simulateController(Ksat,'$K_{\mathrm{sat}}$',ax1,ax2,plotLog=True,plotError=True,style="dashed",mult=0.25)
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax1,ax2,plotLog=True,plotError=True,style="dotted",mult=0.25)
+    # plt.tight_layout()
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax1,ax2,plotLog=True,mult=0.25,
+                       plotError=True,style="solid",plotlabel=True)
     plt.tight_layout()
     
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3) 
+    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+    fig.set_size_inches(6, 10) 
     plt.tight_layout()
-    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=True,sineTrack=True)
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf2,'$\mathcal{H}_{\infty}$ aggressive',ax1,ax2,sineTrack=True)
+    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,printref=False,sineTrack=True,style="dashed")
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax1,ax2,sineTrack=True,style="dotted",printref=True,plotlabel=False)
     plt.tight_layout()
+    # ax1.legend(loc='lower right')
     fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf1,'$\mathcal{H}_{\infty}$ conservative',ax1,ax2,sineTrack=True)
+    simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax1,ax2,sineTrack=True,style="dotted")
     plt.tight_layout()
 
     #%%
@@ -756,7 +832,7 @@ if benchamark_id==6:
     
     
     # Define the symmetric matrix Q
-    def printEllipse(Q,colorString,label):
+    def printEllipse(Q,colorString,label,pos):
         
         # Q=np.linalg.inv(Psat)
         # Create a grid of points
@@ -772,18 +848,19 @@ if benchamark_id==6:
                 Z[i, j] = vec.T@Q@vec
                 
         contour=plt.contour(X, Y, Z, levels=[1], colors=colorString)
+        
         plt.xlabel('$x_1$')
         plt.ylabel('$x_2$')
         plt.title('Contour plot of $x^T Q^{-1} x = 1$')
         # plt.gca().set_aspect('equal', adjustable='box')
-        plt.clabel(contour,contour.levels,fmt= lambda x: str(label))
+        plt.clabel(contour,contour.levels,fmt= lambda x: str(label),inline=True,manual=pos)
         # plt.colorbar(contour)
         #%%
     plt.figure(dpi=160)
-    printEllipse(Psat,'b','$K_\mathrm{sat}$')
+    printEllipse(Psat,'b','$K_\mathrm{sat}$',[(0.5,-2)])
     
-    printEllipse(PKinf1[0],'g','$\mathcal{H}^c_{\infty}$')
-    printEllipse(PKinf2[0],'r','$\mathcal{H}^a_{\infty}$')
+    printEllipse(PKinf1[0],'g','$\mathcal{H}^c_{\infty}$',[(0,2)])
+    printEllipse(PKinf2[0],'r','$\mathcal{H}^a_{\infty}$',[(0,0)])
     plt.show()
 
 
@@ -836,37 +913,42 @@ def H2():
     
     return P,K
 if benchamark_id==5:
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3.5) 
-    
-    simulateController(Ksat,'$K_\mathrm{sat}$ from $x=0$',ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=False)
-    plt.tight_layout()
     PH2,KH2=H2()
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3.5) 
-    simulateController(KH2,'$H_{2}$ from $x=2$ ',ax1,ax2,
-                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False)
+    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+    fig.set_size_inches(6, 10) 
+    
+    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
+                       numStatesToPrint=stateSize-1,haveFault=False,printref=False,sineTrack=True,style='dotted')
     plt.tight_layout()
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3.5) 
-    simulateController(KH2,'$H_{2}$ from $x=0$',ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=False)
     plt.tight_layout()
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3.5) 
-    simulateController(Ksat,'$K$ sat from $x=2$',ax1,ax2,
-                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False)
+    #fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3.5) 
+    simulateController(KH2,'$H_{2}$',ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=False,style='dashed',sineTrack=True)
+
+    
+    ax2.legend()
+    #%%
+    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+    fig.set_size_inches(6, 10) 
+    simulateController(KH2,'$H_{2}$ ',ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dashed',printref=False,mult=1.5,plotError=True,plotLog=True)
+    # plt.tight_layout()
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3.5) 
+    simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dotted',printref=False,mult=1.5,plotError=True,plotLog=True)
     plt.tight_layout()
+    ax2.legend()
     # PKH2=computeEllipsoid(KH2)
 
 
 
 #%%
-def MPCsim(x0=None,label="MPC -"):
+def MPCsim(x0=None,label="MPC -",integralTermToTrack=0.2):
     
     from jax import jit
-    horizon=20
+    horizon=50
     @jit
     def costFun(uG,x0,ref):
         x0S=jnp.reshape(x0*1,(1,stateSize))
@@ -895,12 +977,8 @@ def MPCsim(x0=None,label="MPC -"):
                             onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
     conGra=jax.jit(jax.grad(costFun))
     tStart=time.time()
-    for k in range(0,10000):
-        ref=onp.array(xState*0)
-        ref[0,0]=onp.cos(k/1000)/5+0.5
-        ref[0,1]=onp.cos((600+k)/1000)/5
-        # err=
-        # xState[0,-1]+=-.1
+    for k in range(0,12000):
+        ref=generateRef(k,1)
         
         lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
         uG=jnp.repeat(jnp.array(Ksat@(xState-ref).T),horizon,1).T.ravel()
@@ -908,37 +986,44 @@ def MPCsim(x0=None,label="MPC -"):
         # uF=onp.array(K@(xState-ref).T).ravel()
         uF=onp.reshape(res.x,(horizon,inputSize))
         uF=uF[0,:]
-        xN=system.innerDynamic(xState,uF,p)
+        p=generateFault(k,1)
+        xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
         p=onp.ones((1,paraSize))
-        if k>=3000 and k<4000:
-            p[0,2]=.1
-        if k>=4000:
-            p[0,1]=.1
-        else:
-            pass
+        
         story+=[(onp.array(xState),onp.array(uF))]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
         print('.',end='')
+    
+    
     timeMPC=time.time()-tStart
-        
-    import matplotlib.pyplot as plt
-    fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    fig.set_size_inches(7, 3.5) 
-    ax1.title.set_text('input '+str(label))
+    from cycler import cycler
+    numStatesToPrint=stateSize-1
+    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
+    ax1.set_prop_cycle(mycycler)
+    ax1.title.set_text('control signal' )
+    
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:numStatesToPrint]))
+    ax2.set_prop_cycle(mycycler)
+    
+    
+    
+    fig.set_size_inches(6, 10) 
+    # ax1.title.set_text('input '+str(label))
     ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
-    ax2.title.set_text('state '+str(label))
-    label=[str(label)+"- "+"$x_{}$".format(i) for i in range(0,stateSize-1)]
-    ax2.plot(onp.array([x[0].ravel()[0:stateSize-1] for x in story]).reshape((-1,stateSize-1)),label=label)
+    # ax2.title.set_text('state '+str(label))
+    label=[str(label) if i==0 else None for i in range(0,numStatesToPrint) ]
+    ax2.plot(onp.array([x[0].ravel()[0:stateSize-1] for x in story]).reshape((-1,numStatesToPrint)),label=label)
     plt.tight_layout()
     return ax1,ax2,timeMPC
     
     
-import time
+
 
 ax1,ax2,timeMPC=MPCsim()
 timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
-                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True)
+                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
 plt.tight_layout()
 
 
