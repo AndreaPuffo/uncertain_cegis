@@ -15,6 +15,7 @@ import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
 import time
+from tqdm import tqdm
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -977,7 +978,7 @@ def MPCsim(x0=None,label="MPC -",integralTermToTrack=0.2):
                             onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
     conGra=jax.jit(jax.grad(costFun))
     tStart=time.time()
-    for k in range(0,12000):
+    for k in tqdm(range(0,12000)):
         ref=generateRef(k,1)
         
         lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
@@ -993,8 +994,7 @@ def MPCsim(x0=None,label="MPC -",integralTermToTrack=0.2):
         story+=[(onp.array(xState),onp.array(uF))]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
-        print('.',end='')
-    
+
     
     timeMPC=time.time()-tStart
     from cycler import cycler
