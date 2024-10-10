@@ -15,7 +15,6 @@ import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
 import time
-from tqdm import tqdm
 
 plt.rcParams.update({
     "text.usetex": True,
@@ -366,6 +365,60 @@ def generateRef(k,sineTrackMult):
     ref[0,0]=sineTrackMult*onp.cos(k/1000)/5+0.5
     ref[0,1]=sineTrackMult*onp.cos((600+k)/1000)/5
     return ref
+
+def printStory(ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
+    
+    
+    if plotError:    
+        newStory=[(onp.linalg.norm(x[0][0,0:numStatesToPrint]-x[-1][0,0:numStatesToPrint]),x[1],x[2],x[3]) for x in story]
+    
+        story=newStory
+        
+    from cycler import cycler
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
+    ax1.set_prop_cycle(mycycler)
+    ax1.title.set_text('control signal' )
+    
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:numStatesToPrint]))
+    ax2.set_prop_cycle(mycycler)
+    if plotError:
+        ax2.title.set_text('tracking error')
+    else:
+        ax2.title.set_text('state')
+    # label=None
+    
+    labelU=[labelTitle if i==0 else None for i in range(0,inputSize)  ]
+    labelX=[labelTitle+" - "+"$x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelX=[labelTitle if i==0 else None for i   in range(0,numStatesToPrint)]
+    labelR=["ref $x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
+    
+    
+    # else:
+    ax1.plot(onp.array([x[1].ravel() for x in story]).reshape((-1,inputSize)),ls=style,label=labelU)
+    if plotLog:
+        # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
+        ax2.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
+    else:
+        ax2.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=labelX[0:len(story[0])],ls=style)
+    
+    if printref and not(plotLog):
+        ax2.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='solid',
+                 label=labelR)
+        
+    mask=[0]+[i  for i in range(1,len(story)) if not(onp.allclose(story[i-1][2],story[i][2]))]+[len(story)]
+    color=['white','yellow','greenyellow','yellow','white','yellow','white','yellow']
+    print(mask)
+    if haveFault:
+        for k in range(0,len(mask)-1):
+            ax1.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
+            ax2.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
+    if plotlabel:
+        ax2.legend(loc='lower right')
+        # ax1.legend(loc='lower right')
+        pass
+    
+    pass
 #%%
 tau=1-0.001
 def Bemporad():
@@ -709,7 +762,13 @@ for xp in contracted:
 def simulateController(K,labelTitle,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
                        plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
     story=[]
-    
+    if not callable(K):
+        def computeU(xState,ref):
+            uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
+            return uF
+    else:
+        computeU=K
+        
     if x0 is None:
         xState=onp.zeros((1,stateSize))
         # xState[0,0]=-0.3
@@ -726,9 +785,9 @@ def simulateController(K,labelTitle,ax1,ax2,x0=None,printref=True,style='-',only
         ref=generateRef(k,sineTrackMult)
         # err=
         # xState[0,-1]+=-.1
-        uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
+        # uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
         # uF=onp.array(K@(xState-ref).T).ravel()
-        
+        uF=computeU(xState,ref)
         xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
         p=onp.ones((1,paraSize))
         if haveFault:
@@ -736,60 +795,15 @@ def simulateController(K,labelTitle,ax1,ax2,x0=None,printref=True,style='-',only
             
         ref[0,-2]=integralTermToTrack*1
             
-        if plotError:
-            
-            story+=[(onp.linalg.norm(xState[0,0:numStatesToPrint]-ref[0,0:numStatesToPrint]),uF,p*1,ref)]
-        else:
-            story+=[(xState,uF,p*1,ref)]
+        
+        story+=[(xState,uF,p*1,ref)]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
         # print(xState)
     if onlySim:
         return xState,story
     timeStaticFeedback=time.time()-tStart
-    from cycler import cycler
-    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
-    ax1.set_prop_cycle(mycycler)
-    ax1.title.set_text('control signal' )
-    
-    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:numStatesToPrint]))
-    ax2.set_prop_cycle(mycycler)
-    if plotError:
-        ax2.title.set_text('tracking error')
-    else:
-        ax2.title.set_text('state')
-    # label=None
-    
-    labelU=[labelTitle if i==0 else None for i in range(0,inputSize)  ]
-    labelX=[labelTitle+" - "+"$x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
-    labelX=[labelTitle if i==0 else None for i   in range(0,numStatesToPrint)]
-    labelR=["ref $x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
-    labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
-    
-    
-    # else:
-    ax1.plot(onp.array([x[1].ravel() for x in story]).reshape((-1,inputSize)),ls=style,label=labelU)
-    if plotLog:
-        # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
-        ax2.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
-    else:
-        ax2.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=labelX[0:len(story[0])],ls=style)
-    
-    if printref and not(plotLog):
-        ax2.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='solid',
-                 label=labelR)
-        
-    mask=[0]+[i  for i in range(1,len(story)) if not(onp.allclose(story[i-1][2],story[i][2]))]+[len(story)]
-    color=['white','yellow','greenyellow','yellow','white','yellow','white','yellow']
-    print(mask)
-    if haveFault:
-        for k in range(0,len(mask)-1):
-            ax1.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
-            ax2.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
-    if plotlabel:
-        ax2.legend(loc='lower right')
-        # ax1.legend(loc='lower right')
-        pass
+    printStory(ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
     return timeStaticFeedback
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
@@ -946,8 +960,8 @@ if benchamark_id==5:
 
 
 #%%
-def MPCsim(x0=None,label="MPC -",integralTermToTrack=0.2):
-    
+
+def genMPC():
     from jax import jit
     horizon=50
     @jit
@@ -963,67 +977,49 @@ def MPCsim(x0=None,label="MPC -",integralTermToTrack=0.2):
             error+=jnp.sum(jnp.ravel(uF[r,:])**2)/10000
             x0S=x0SN*1
         return error
+                
+                
             
-            
-        
-    story=[]
-    if x0 is None:
-        xState=onp.zeros((1,stateSize))
-        xState[0,0]=0
-        xState[0,1]=0
-    else:
-        xState=onp.reshape(x0,(1,stateSize))
-    p=jnp.ones((1,paraSize))
     b=scipy.optimize.Bounds(onp.repeat(Bounds.lb[stateSize:stateSize+inputSize],horizon),
                             onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
     conGra=jax.jit(jax.grad(costFun))
-    tStart=time.time()
-    for k in tqdm(range(0,12000)):
-        ref=generateRef(k,1)
-        
+    
+    
+    def computeUMPC(xState,ref):
         lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
         uG=jnp.repeat(jnp.array(Ksat@(xState-ref).T),horizon,1).T.ravel()
         res=scipy.optimize.minimize(lcost,uG,bounds=b,jac=True, method='L-BFGS-B')
         # uF=onp.array(K@(xState-ref).T).ravel()
         uF=onp.reshape(res.x,(horizon,inputSize))
-        uF=uF[0,:]
-        p=generateFault(k,1)
-        xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
-        p=onp.ones((1,paraSize))
-        
-        story+=[(onp.array(xState),onp.array(uF))]
-        xState=onp.array(onp.reshape(xN,(1,stateSize)))
-        
-
-    
-    timeMPC=time.time()-tStart
-    from cycler import cycler
-    numStatesToPrint=stateSize-1
-    fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
-    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
-    ax1.set_prop_cycle(mycycler)
-    ax1.title.set_text('control signal' )
-    
-    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:numStatesToPrint]))
-    ax2.set_prop_cycle(mycycler)
-    
-    
-    
-    fig.set_size_inches(6, 10) 
-    # ax1.title.set_text('input '+str(label))
-    ax1.plot(onp.array([x[1] for x in story]).reshape((-1,inputSize)))
-    # ax2.title.set_text('state '+str(label))
-    label=[str(label) if i==0 else None for i in range(0,numStatesToPrint) ]
-    ax2.plot(onp.array([x[0].ravel()[0:stateSize-1] for x in story]).reshape((-1,numStatesToPrint)),label=label)
-    plt.tight_layout()
-    return ax1,ax2,timeMPC
-    
-    
+        uF=uF[0,:]*1
+        return uF
+    return computeUMPC
 
 
-ax1,ax2,timeMPC=MPCsim()
+
+computeUMPC=genMPC()
+
+fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+fig.set_size_inches(6, 10) 
+timeMPC=simulateController(computeUMPC,'MPC',ax1,ax2,
+                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+
+# ax1,ax2,timeMPC=MPCsim()
 timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
+                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+plt.tight_layout()
+ax2.legend(loc="lower left")
+#%%
+
+fig, (ax1, ax2)=plt.subplots(2, 1, sharey=False,dpi=160)
+fig.set_size_inches(6, 10) 
+timeMPC=simulateController(computeUMPC,'MPC',ax1,ax2,
                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
+
+# ax1,ax2,timeMPC=MPCsim()
+timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{sat}$',ax1,ax2,
+                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=False,style='solid',sineTrack=True)
+
 plt.tight_layout()
 
 
