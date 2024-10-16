@@ -754,13 +754,13 @@ for comp in range(0,3):
             x0=onp.resize(sample[k][0:stateSize],(stateSize,1))
             p=onp.ones((paraSize));
             p[comp]=sample[k][stateSize]
-            xEnd=simForMC(x0,p,-K_Hinf2)
+            xEnd=simForMC(x0,p,Ksat)
             story+=[(x0,sample[k][stateSize],xEnd)]
             print('.',end='')
     
     contracted=[x for x in story if onp.linalg.norm(x[-1])<0.1*onp.linalg.norm(x[0])]
     fig = plt.figure()
-    plt.title(str(comp)+" K_Hinf2")
+    plt.title(str(comp)+" Ksat")
     ax = fig.add_subplot(projection='3d')
     for xp in contracted:    
         ax.scatter(xp[0][0], xp[0][1], xp[1], facecolor="gold")
