@@ -324,7 +324,7 @@ class squaredTank(BaseBenchmark):
     
 
 import sys
-benchamark_id=5
+benchamark_id=6
 b=2
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -730,34 +730,44 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
 # Kinf=-K_Hinf1
 
 #%%
-
+from jax import jit
+@jit
 def simForMC(x0,p,K,lenSim=500):
-    xState=onp.reshape(x0,(1,stateSize))
-    p=onp.reshape(p,(1,paraSize))
-    ref=onp.array(xState*0)
+    xState=jnp.reshape(x0,(1,stateSize))
+    p=jnp.reshape(p,(1,paraSize))
+    ref=jnp.array(xState*0)
     for k in range(0,lenSim):       
-        uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])        
+        uF=jnp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])        
         xN=system.innerDynamic(xState,uF,p)
-        xState=onp.array(onp.reshape(xN,(1,stateSize)))
+        xState=jnp.array(jnp.reshape(xN,(1,stateSize)))
         
     return xState
-story=[]
-if benchamark_id==6:
-    for k in range(0,800):
-        comp=onp.random.randint(0,paraSize);
-        val=onp.random.uniform(0,1);
-        x0=onp.random.uniform(Bounds.lb[0:stateSize],Bounds.ub[0:stateSize]);
-        p=onp.ones((paraSize));
-        p[comp]=val
-        xEnd=simForMC(x0,p,-K_Hinf2)
-        story+=[(x0,p,xEnd)]
-        print('.',end='')
-    #%%
-contracted=[x for x in story if onp.linalg.norm(x[-1])<0.1*onp.linalg.norm(x[0])]
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-for xp in contracted:    
-    ax.scatter(xp[0][0], xp[0][1], xp[1])
+#%%
+from scipy.stats import qmc
+sampler = qmc.LatinHypercube(d=stateSize+1,seed=1)
+sample = sampler.random(n=500)
+sample=qmc.scale(sample, onp.concatenate((onp.ones(1)*0,Bounds.lb[0:stateSize])), onp.concatenate((onp.ones(1),Bounds.ub[0:stateSize])))
+for comp in range(0,3):
+    story=[]
+    if benchamark_id==6:
+        for k in range(0,len(sample)):
+            x0=onp.resize(sample[k][0:stateSize],(stateSize,1))
+            p=onp.ones((paraSize));
+            p[comp]=sample[k][stateSize]
+            xEnd=simForMC(x0,p,-K_Hinf2)
+            story+=[(x0,sample[k][stateSize],xEnd)]
+            print('.',end='')
+    
+    contracted=[x for x in story if onp.linalg.norm(x[-1])<0.1*onp.linalg.norm(x[0])]
+    fig = plt.figure()
+    plt.title(str(comp)+" K_Hinf2")
+    ax = fig.add_subplot(projection='3d')
+    for xp in contracted:    
+        ax.scatter(xp[0][0], xp[0][1], xp[1], facecolor="gold")
+    notContracted=[x for x in story if onp.linalg.norm(x[-1])>=0.1*onp.linalg.norm(x[0])]
+    for xp in notContracted:    
+        ax.scatter(xp[0][0], xp[0][1], xp[1], facecolor="blue")
+
 #%%
 def simulateController(K,labelTitle,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
                        plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
