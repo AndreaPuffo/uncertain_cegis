@@ -324,7 +324,7 @@ class squaredTank(BaseBenchmark):
     
 
 import sys
-benchamark_id=6
+benchamark_id=5
 b=2
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -376,8 +376,13 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     
     
     if plotError:    
-        newStory=[(onp.linalg.norm(x[0][0,0:numStatesToPrint]-x[-1][0,0:numStatesToPrint]),x[1],x[2],x[3]) for x in story]
-    
+        newStory=[]
+        for x in story:
+            error=x[0].ravel()[0:numStatesToPrint]-x[-1].ravel()[0:numStatesToPrint]
+            # print(x)
+            # print(error)
+            newStory+=[[onp.linalg.norm(error)]+x[1:]]
+        # print(newStory)
         story=newStory
         
     from cycler import cycler
@@ -405,9 +410,13 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     
     # ax0.title.set_text('$||\cdot||$ control effort')
     ax0.set_ylabel('$||\cdot||$ control\\ signal')
-    ax0.plot([onp.linalg.norm(x[1].ravel()) for x in story],color='#1f77b4',ls=style)
+    ax0.plot([onp.linalg.norm(x[1].ravel()) for x in story],color='#1f77b4',ls=style,label=str(labelTitle))
     # else:
-    ax1.plot(onp.array([x[1].ravel() for x in story]).reshape((-1,inputSize)),ls=style,label=labelU)
+   
+    ax1.plot(onp.array([Bounds.lb[stateSize:stateSize+inputSize] for x in story]).reshape((-1,inputSize)),ls='dotted',color='grey',linewidth=1.0)
+    ax1.plot(onp.array([Bounds.ub[stateSize:stateSize+inputSize] for x in story]).reshape((-1,inputSize)),ls='dotted',color='grey',linewidth=1.0)
+    ax1.plot(onp.array([x[1].ravel() for x in story]).reshape((-1,inputSize)),ls=style,label=labelU) 
+    
     if plotLog:
         # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
         ax2.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
@@ -425,8 +434,9 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
         for k in range(0,len(mask)-1):
             ax1.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
             ax2.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
+            ax0.axvspan(mask[k],mask[k+1],facecolor=color[k],alpha=.125,ec ='black',zorder=0)
     if plotlabel:
-        ax2.legend(loc='lower right')
+        ax0.legend(loc='lower right')
         # ax1.legend(loc='lower right')
         pass
     ax0.xaxis.set_major_formatter(my_formatter)
@@ -446,8 +456,9 @@ def Bemporad():
     p=onp.ones((paraSize))
     setOfVertices=[computeAB(x,u,p)]
     print(setOfVertices)
-    
+    trackingNumberOfiterations=0
     while(True):
+        
         def synthesizeController():
            
             
@@ -578,6 +589,8 @@ def Bemporad():
                 para_v=onp.ones((paraSize));
                 para_v[k]=p[0:1];
                 setOfVertices+=[computeAB(xState,u,para_v)]
+        trackingNumberOfiterations+=1
+    print(trackingNumberOfiterations)
     return P,K,len(setOfVertices)
     
     
@@ -829,11 +842,12 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
         p=onp.ones((1,paraSize))
         if haveFault:
             p=generateFault(k,mult)
-            
-        ref[0,-2]=integralTermToTrack*1
+        
+        if integralTermToTrack>1e-4:
+            ref[0,-2]=integralTermToTrack*1
             
         
-        story+=[(xState,uF,p*1,ref)]
+        story+=[[xState,uF,p*1,ref]]
         xState=onp.array(onp.reshape(xN,(1,stateSize)))
         
         # print(xState)
@@ -848,29 +862,32 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 
 # plt.figure()
 if benchamark_id==6:
-    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     # plt.tight_layout()
-    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,plotLog=True,plotError=True,style="dashed",mult=0.25)
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
+                       plotError=True,style="dashed",mult=0.25)
     # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     # fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,plotLog=True,plotError=True,style="dotted",mult=0.25)
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
+                       plotError=True,style="dotted",mult=0.25)
     # plt.tight_layout()
     # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     # fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,plotLog=True,mult=0.25,
+    simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,plotLog=True,mult=0.25,integralTermToTrack=0,
                        plotError=True,style="solid",plotlabel=True)
+    # ax0.legend(loc='lower right')
     plt.tight_layout()
     
-    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     plt.tight_layout()
-    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,printref=False,sineTrack=True,style="dashed")
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,printref=False,sineTrack=True,style="dashed",integralTermToTrack=0)
     # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     # fig.set_size_inches(7, 3) 
-    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted",printref=True,plotlabel=False)
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted",integralTermToTrack=0,printref=True,plotlabel=False)
     plt.tight_layout()
-    # ax1.legend(loc='lower right')
+    ax0.legend(loc='lower right')
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 2, sharey=False,dpi=160)
     # fig.set_size_inches(7, 3) 
     # simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted")
@@ -966,12 +983,12 @@ def H2():
     return P,K
 if benchamark_id==5:
     PH2,KH2=H2()
-    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     
     simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
                        numStatesToPrint=stateSize-1,haveFault=False,printref=False,sineTrack=True,style='dotted')
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.tight_layout()
     #fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
     # fig.set_size_inches(7, 3.5) 
@@ -981,7 +998,7 @@ if benchamark_id==5:
     
     ax2.legend()
     #%%
-    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     simulateController(KH2,'$H_{2}$ ',ax0,ax1,ax2,
                        2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dashed',printref=False,mult=1.5,plotError=True,plotLog=True)
@@ -1035,32 +1052,32 @@ def genMPC():
 
 
 computeUMPC=genMPC()
-
-fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
-fig.set_size_inches(6, 10) 
-timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
-
-# ax1,ax2,timeMPC=MPCsim()
-timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
-plt.tight_layout()
-ax2.legend(loc="lower left")
-#%%
-
-fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [1, 2, 2]})
-fig.set_size_inches(6, 10) 
-timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
-
-# ax1,ax2,timeMPC=MPCsim()
-timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-                   printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
-
-plt.tight_layout()
-
-
-print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
+if benchamark_id==5:
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+    
+    # ax1,ax2,timeMPC=MPCsim()
+    timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+    plt.tight_layout()
+    ax2.legend(loc="lower left")
+    #%%
+    
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
+    
+    # ax1,ax2,timeMPC=MPCsim()
+    timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
+    
+    plt.tight_layout()
+    
+    
+    print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
 # #%%
 # def Khotare():
 #     pass
