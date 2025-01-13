@@ -72,7 +72,7 @@ Move to step 2).
 These commands will run the training for the *nonlinear AUV* system:
 ```
 cd uncertain_cegis/src
-python3 main_poly_auv_disjunction.py  
+python3 main_train_is_sat.py  
 ```
   
 TODO: update new main.    
