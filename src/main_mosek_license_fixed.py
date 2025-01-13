@@ -12,7 +12,7 @@ import os
 from cvxpy.tests.solver_test_helpers import StandardTestLPs
 
 # Set the location of the Mosek license file -- update as necessary
-os.environ['MOSEKLM_LICENSE_FILE'] = '/home/.../anaconda3/lib/python3.9/site-packages/mosek/mosek.lic'
+os.environ['MOSEKLM_LICENSE_FILE'] = './mosek_license/mosek.lic'
 StandardTestLPs.test_lp_0(solver='MOSEK')
 
 import jax
@@ -877,7 +877,7 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 
 # plt.figure()
 if benchamark_id==6:
-    print("TODO warninig: skipped section due to errors.")
+    print("TODO warning: skipped section due to errors.")
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     # fig.set_size_inches(6, 10) 
     # # plt.tight_layout()
@@ -998,7 +998,7 @@ def H2():
     
     return P,K
 if benchamark_id==5:
-    print("TODO warninig: skipped section due to errors.")
+    print("TODO warning: skipped section due to errors.")
 
     # PH2,KH2=H2()
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
@@ -1071,7 +1071,7 @@ def genMPC():
 
 computeUMPC=genMPC()
 if benchamark_id==5:
-    print("TODO warninig: skipped section due to errors.")
+    print("TODO warning: skipped section due to errors.")
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     # fig.set_size_inches(6, 10) 
     # timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
