@@ -14,9 +14,19 @@ cd uncertain_cegis
 If Python3.12 is available on your machine, you can install the required packages at system level with:
 ```  
 pip3 install cvxpy
+pip3 install mosek
 pip3 install -r ./requirements.txt  
 ```
+
+For completing Mosek installation, refer to: https://docs.mosek.com/latest/install/installation.html
+In short:
+```  
+cd /home/$whoami (TODO:fix)
+cd anaconda3/envs/env_unc_cegis/lib/python3.12/site-packages/mosek/10.2/tools/platform/<PLATFORM>/bin
+```
   
+"where <PLATFORM> is linux64x86 or linuxaarch64 depending on the version of MOSEK installed." 
+   
 TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
    
 Move to step 2).
@@ -29,6 +39,10 @@ If [Anaconda](https://docs.anaconda.com/free/anaconda/install/) is installed on 
 conda env create -f documentation/environment_unc_cegis.yml
 conda activate env_unc_cegis
 ```
+
+TODO: environment file not including Mosek, to be updated.
+pip3 install mosek  
+  
   
 TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
    
@@ -50,6 +64,8 @@ pip3 install -r documentation/requirements.txt
 ```
     
 TODO: add installation of jax aside (it depends on whether you have a CPU or GPU).  
+   
+TODO: requirement file not including Mosek, to be updated.
    
 (use `deactivate` upon completion.)
 
