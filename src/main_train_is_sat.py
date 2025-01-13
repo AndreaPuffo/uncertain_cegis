@@ -1,6 +1,6 @@
 #
 # The main file to run the IS-sat procedure, and test the syntesised controller.
-# CAVEAT: first, set the Mosek license file location from within "os.environ".
+# CAVEAT: first, copy Mosek license file location into "./mosek_license/mosek.lic".
 #
 
 import jax
@@ -339,8 +339,8 @@ class squaredTank(BaseBenchmark):
     
 
 import sys
-benchamark_id=5
-b=2
+benchmark_id=5  
+b=2  # size of the control validity domain 
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
     2: lambda: (glider,2,2,1,scipy.optimize.Bounds(onp.array([-1,-1,-1,-onp.pi/8,-5]),onp.array([1,1,1,onp.pi/8,5])),onp.eye(4)),
@@ -354,7 +354,7 @@ switch_dict = {
                             onp.array([b,b,38,38,38,1])),onp.eye(6))
 }
      
-systemClass,stateSize,inputSize,paraSize,Bounds,mask=switch_dict.get(benchamark_id)()
+systemClass,stateSize,inputSize,paraSize,Bounds,mask=switch_dict.get(benchmark_id)()
 
 
 
@@ -590,7 +590,7 @@ def Bemporad():
         # result=halo.minimize();
         result={'best_f':res.fun,'best_x':res.x}
         # break
-        print("veryfier says: ",result['best_f'])
+        print("verfier says: ",result['best_f'])
         if result['best_f']>=-1e-9*0:
             break
         else:
@@ -681,6 +681,7 @@ def computeEllipsoid(Kext):
             H=Z.value@P 
             for AB in setOfVertices:
                 A,B=AB
+                print("Eigenvalues of the current solution: ")
                 print(onp.linalg.eigvals(A+B@K))
                 assert(onp.all(onp.abs(onp.linalg.eigvals(A+B@K))<1))
             return P,K,H
@@ -796,7 +797,7 @@ def LHSstabilityTest(label,Kgain,threshold=0.1):
     str_comp=['$h_1$','$h_2$','$h_3$']
     for comp in range(0,3):
         story=[]
-        if benchamark_id==6:
+        if benchmark_id==6:
             for k in range(0,len(sample)):
                 x0=onp.resize(sample[k][0:stateSize],(stateSize,1))
                 p=onp.ones((paraSize));
@@ -876,8 +877,8 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 
 
 # plt.figure()
-if benchamark_id==6:
-    print("TODO warning: skipped section due to errors.")
+if benchmark_id==6:
+    print("TODO warning: id=6, skipped section due to errors.")
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     # fig.set_size_inches(6, 10) 
     # # plt.tight_layout()
@@ -997,37 +998,36 @@ def H2():
     P,K=synthesizeController()
     
     return P,K
-if benchamark_id==5:
-    print("TODO warning: skipped section due to errors.")
+if benchmark_id==5:
+    print("TODO warning: id=5, skipped section due to errors.")
 
-    # PH2,KH2=H2()
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
+    PH2,KH2=H2()
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
     
-    # simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-    #                    numStatesToPrint=stateSize-1,haveFault=False,printref=False,sineTrack=True,style='dotted')
-    # # plt.tight_layout()
-    # plt.tight_layout()
-    # #fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3.5) 
-    # simulateController(KH2,'$H_{2}$',ax0,ax1,ax2,
-    #                    printref=False,numStatesToPrint=stateSize-1,haveFault=False,style='dashed',sineTrack=True)
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       numStatesToPrint=stateSize-1,haveFault=False,printref=False,sineTrack=True,style='dotted')
+    
+    plt.tight_layout()
+
+    simulateController(KH2,'$H_{2}$',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=False,style='dashed',sineTrack=True)
 
     
-    # ax2.legend()
-    # #%%
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
-    # simulateController(KH2,'$H_{2}$ ',ax0,ax1,ax2,
-    #                    2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dashed',printref=False,mult=1.5,plotError=True,plotLog=True)
-    # # plt.tight_layout()
-    # # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3.5) 
-    # simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-    #                    2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dotted',printref=False,mult=1.5,plotError=True,plotLog=True)
-    # plt.tight_layout()
-    # ax2.legend()
-    # # PKH2=computeEllipsoid(KH2)
+    ax2.legend()
+    #%%
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    simulateController(KH2,'$H_{2}$ ',ax0,ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dashed',printref=False,mult=1.5,plotError=True,plotLog=True)
+    
+    
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       2*onp.ones((1,stateSize)),numStatesToPrint=stateSize-1,haveFault=False,style='dotted',printref=False,mult=1.5,plotError=True,plotLog=True)
+    
+    plt.tight_layout()
+    ax2.legend()
+    # PKH2=computeEllipsoid(KH2)
 
 
 
@@ -1070,7 +1070,7 @@ def genMPC():
 
 
 computeUMPC=genMPC()
-if benchamark_id==5:
+if benchmark_id==5:
     print("TODO warning: skipped section due to errors.")
     # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     # fig.set_size_inches(6, 10) 
