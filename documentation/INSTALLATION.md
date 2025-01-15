@@ -51,11 +51,11 @@ Move to step 2).
 
 ### 1.3) Approach 3: create a Python virtual environment
   
-If Python3.12 is installed on your system, the code can be run in a [virtual environment](https://docs.python.org/3/library/venv.html). Start as follows:
+If Python3.9 is installed on your system, the code can be run in a [virtual environment](https://docs.python.org/3/library/venv.html). Start as follows:
 ```
 pip3 install virtualenv
-python3 -m venv is_sat_venv
-source is_sat_venv/bin/activate
+python3.9 -m venv venv_is_sat
+source venv_is_sat/bin/activate
 python -V
 pip3 install -r documentation/requirements.txt  
 ```

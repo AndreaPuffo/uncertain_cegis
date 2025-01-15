@@ -1,6 +1,6 @@
 #
 # The main file to run the IS-sat procedure, and test the syntesised controller.
-# CAVEAT: first, copy Mosek license file location into "./mosek_license/mosek.lic".
+# CAVEAT: first, copy Mosek license file into "./mosek_license/mosek.lic".
 #
 
 import jax
@@ -32,13 +32,14 @@ import time
 
 
 plt.rcParams.update({
-    "text.usetex": True,
+    "text.usetex": False,
 })
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.size'] = '14'
 plt.tight_layout()
+plt.show()
 #%%
 class BaseBenchmark:
     def __init__(self,noiseCov=None,enableNoise=True):
@@ -878,38 +879,38 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 
 # plt.figure()
 if benchmark_id==6:
-    print("TODO warning: id=6, skipped section due to errors.")
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
-    # # plt.tight_layout()
-    # simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
-    #                    plotError=True,style="dashed",mult=0.25)
-    # # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3) 
-    # simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
-    #                    plotError=True,style="dotted",mult=0.25)
-    # # plt.tight_layout()
-    # # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3) 
-    # simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,plotLog=True,mult=0.25,integralTermToTrack=0,
-    #                    plotError=True,style="solid",plotlabel=True)
-    # # ax0.legend(loc='lower right')
-    # plt.tight_layout()
     
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
     # plt.tight_layout()
-    # simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,printref=False,sineTrack=True,style="dashed",integralTermToTrack=0)
-    # # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3) 
-    # simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted",integralTermToTrack=0,printref=True,plotlabel=False)
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
+                       plotError=True,style="dashed",mult=0.25)
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,plotLog=True,integralTermToTrack=0,
+                       plotError=True,style="dotted",mult=0.25)
     # plt.tight_layout()
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,plotLog=True,mult=0.25,integralTermToTrack=0,
+                       plotError=True,style="solid",plotlabel=True)
     # ax0.legend(loc='lower right')
-    # # fig, (ax0,ax1, ax2)=plt.subplots(3, 2, sharey=False,dpi=160)
-    # # fig.set_size_inches(7, 3) 
-    # # simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted")
-    # # plt.tight_layout()
-
+    plt.tight_layout()
+    
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    plt.tight_layout()
+    simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,printref=False,sineTrack=True,style="dashed",integralTermToTrack=0)
+    # fig, (ax1, ax2)=plt.subplots(1, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    simulateController(-K_Hinf2,'$\mathcal{H}^a_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted",integralTermToTrack=0,printref=True,plotlabel=False)
+    plt.tight_layout()
+    ax0.legend(loc='lower right')
+    # fig, (ax0,ax1, ax2)=plt.subplots(3, 2, sharey=False,dpi=160)
+    # fig.set_size_inches(7, 3) 
+    # simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted")
+    # plt.tight_layout()
+    plt.show()
     #%%
     PKinf2=computeEllipsoid(-K_Hinf2)
     PKinf1=computeEllipsoid(-K_Hinf1)
@@ -999,7 +1000,6 @@ def H2():
     
     return P,K
 if benchmark_id==5:
-    print("TODO warning: id=5, skipped section due to errors.")
 
     PH2,KH2=H2()
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
@@ -1027,6 +1027,7 @@ if benchmark_id==5:
     
     plt.tight_layout()
     ax2.legend()
+    plt.show()
     # PKH2=computeEllipsoid(KH2)
 
 
@@ -1071,31 +1072,30 @@ def genMPC():
 
 computeUMPC=genMPC()
 if benchmark_id==5:
-    print("TODO warning: skipped section due to errors.")
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
-    # timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-    #                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
     
-    # # ax1,ax2,timeMPC=MPCsim()
-    # timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-    #                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
-    # plt.tight_layout()
-    # ax2.legend(loc="lower left")
-    # #%%
+    # ax1,ax2,timeMPC=MPCsim()
+    timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+    plt.tight_layout()
+    ax2.legend(loc="lower left")
+    #%%
     
-    # fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    # fig.set_size_inches(6, 10) 
-    # timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-    #                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
+    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+    fig.set_size_inches(6, 10) 
+    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
     
-    # # ax1,ax2,timeMPC=MPCsim()
-    # timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-    #                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
+    # ax1,ax2,timeMPC=MPCsim()
+    timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
     
-    # plt.tight_layout()
-
-    # print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
+    plt.tight_layout()
+    plt.show()
+    print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
 
 
 
