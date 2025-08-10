@@ -6,9 +6,13 @@
 # benchmark_id  
 # and tune the "b"
 # 
+# To synthesise a IS-sat function for your system, follow one of the dynamics as an example, such as the AUV model defined in the class "class AUV(BaseBenchmark):". 
+# Define a new benchmark_id, and define a corresponding lambda function, where you set the boundaries of the states, inputs and faults.
+# 
 
 import jax
 from jax import numpy as jnp
+from jax import jit
 jax.config.update("jax_enable_x64", True)
 import sys
 sys.dont_write_bytecode=True
@@ -16,12 +20,16 @@ import mosek
 import os
 from functools import partial
 import scipy
-import numpy.matlib
 import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
 import time
+import cvxpy as cp
 from cvxpy.tests.solver_test_helpers import StandardTestLPs
+import numpy.matlib
+from matplotlib.ticker import FuncFormatter
+from cycler import cycler
+from scipy.stats import qmc
 
 # Set the location of the Mosek license file -- update as necessary
 os.environ['MOSEKLM_LICENSE_FILE'] = './mosek_license/mosek.lic'
@@ -377,7 +385,7 @@ def generateRef(k,sineTrackMult):
     ref[0,1]=sineTrackMult*onp.cos((600+k)/1000)/5
     return ref
 
-from matplotlib.ticker import FuncFormatter
+
 @FuncFormatter
 def my_formatter(x, pos):
      return "{}".format(x/100.0)
@@ -396,7 +404,7 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
         # print(newStory)
         story=newStory
         
-    from cycler import cycler
+
     mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
     ax1.set_prop_cycle(mycycler)
     # ax1.title.set_text('control signal' )
@@ -460,7 +468,7 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
 #%%
 tau=1-0.001
 def Bemporad():
-    import cvxpy as cp
+
    
     x=onp.zeros((stateSize))+1;
     u=onp.zeros((inputSize))+1
@@ -610,7 +618,6 @@ def Bemporad():
 
 
 def computeEllipsoid(Kext):
-    import cvxpy as cp
     
     x=onp.zeros((stateSize))+1;
     u=onp.zeros((inputSize))+1
@@ -772,7 +779,6 @@ K_Hinf1= onp.array([[232.1081,  277.2772],
 # Kinf=-K_Hinf1
 
 #%%
-from jax import jit
 @jit
 def simForMC(x0,p,K,lenSim=300):
     xState=jnp.reshape(x0,(1,stateSize))
@@ -785,7 +791,7 @@ def simForMC(x0,p,K,lenSim=300):
         
     return xState
 #%%
-from scipy.stats import qmc
+
 sampler = qmc.LatinHypercube(d=stateSize+1,seed=1)
 sample = sampler.random(n=2500)
 sample=qmc.scale(sample, onp.concatenate((onp.ones(1)*0,Bounds.lb[0:stateSize])), onp.concatenate((onp.ones(1),Bounds.ub[0:stateSize])))
@@ -909,24 +915,23 @@ if benchmark_id==6:
     #%%
     PKinf2=computeEllipsoid(-K_Hinf2)
     PKinf1=computeEllipsoid(-K_Hinf1)
-    import numpy as np
-    #%%
+
     
     
     # Define the symmetric matrix Q
     def printEllipse(Q,colorString,label,pos):
         
-        # Q=np.linalg.inv(Psat)
+        # Q=onp.linalg.inv(Psat)
         # Create a grid of points
-        x = np.linspace(-2, 2, 100)
-        y = np.linspace(-2, 2, 100)
-        X, Y = np.meshgrid(x, y)
-        Z = np.zeros_like(X)
+        x = onp.linspace(-2, 2, 100)
+        y = onp.linspace(-2, 2, 100)
+        X, Y = onp.meshgrid(x, y)
+        Z = onp.zeros_like(X)
         
         # Compute the quadratic form values on the grid
         for i in range(X.shape[0]):
             for j in range(X.shape[1]):
-                vec = np.array([X[i, j], Y[i, j]]).reshape((2,1))
+                vec = onp.array([X[i, j], Y[i, j]]).reshape((2,1))
                 Z[i, j] = vec.T@Q@vec
                 
         contour=plt.contour(X, Y, Z, levels=[1], colors=colorString)
@@ -949,7 +954,7 @@ if benchmark_id==6:
 #%%
 def H2():
     # pass
-    import cvxpy as cp
+
     
     
     x=onp.zeros((stateSize));
@@ -1030,7 +1035,7 @@ if benchmark_id==5:
 #%%
 #TODO:RAM
 def genMPC():
-    from jax import jit
+    
     horizon=50
     @jit
     def costFun(uG,x0,ref):
@@ -1096,8 +1101,7 @@ if benchmark_id==5:
 # #%%
 # def Khotare():
 #     pass
-#     import cvxpy as cp
-#     from halo import HALO
+#     from halo import HALO ## caveat: module not included in installation packages, not needed at the moment.
     
     
 #     max_feval = 8000  # maximum number of function evaluations
