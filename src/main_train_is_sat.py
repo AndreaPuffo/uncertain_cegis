@@ -352,8 +352,8 @@ Parameters to be modified
 benchmark_id=5  
 b=2  # size of the control validity domain 
 test_alternative_MPC_tuning = True
-total_MPC_tuning_time_horizon = 1 # number of different MPC tuning time horizon to explore
-total_MPC_tuning_gain = 2 # number of different MPC tuning gain to explore
+total_MPC_tuning_time_horizon = 5 # number of different MPC tuning time horizon to explore
+total_MPC_tuning_gain = 3 # number of different MPC tuning gain to explore
 
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -401,7 +401,7 @@ def my_formatter(x, pos):
      return "{}".format(x/100.0)
     
     
-def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
+def printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
     
     
     if plotError:    
@@ -438,7 +438,7 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
     
     # ax0.title.set_text('$||\cdot||$ control effort')
-    ax0.set_ylabel('$||\cdot||$ control\ signal')
+    ax0.set_ylabel('$||\cdot||$ control signal')
     ax0.plot([onp.linalg.norm(x[1].ravel()) for x in story],color='#1f77b4',ls=style,label=str(labelTitle))
     # else:
    
@@ -474,6 +474,30 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     # ax1.set_xlabel('$\mathrm{[seconds]}$')
     ax2.xaxis.set_major_formatter(my_formatter)
     ax2.set_xlabel('$\mathrm{time [seconds]}$')
+
+
+    # Custom axes for multiple MPC tuning comparison
+    ax3.set_ylabel('$||\cdot||$ control signal')
+    ax3.set_xlabel('$\mathrm{time [seconds]}$')
+    ax3.plot([onp.linalg.norm(x[1].ravel()) for x in story],ls=style,label=str(labelTitle))
+    ax3.legend(loc='lower right')
+
+    if plotLog:
+        # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
+        ax4.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
+    else:
+        ax4.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=labelX[0:len(story[0])],ls=style)
+    
+    if printref and not(plotLog):
+        ax4.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='solid',
+                 label=labelR)
+    ax4.xaxis.set_major_formatter(my_formatter)
+    ax4.set_xlabel('$\mathrm{time [seconds]}$')
+    if plotError:
+        ax4.set_ylabel('tracking error')
+    else:
+        ax4.set_ylabel('state')
+
     pass
 #%%
 tau=1-0.001
@@ -837,7 +861,7 @@ if False:
     LHSstabilityTest("$K_\mathrm{IS-sat}$",Ksat)
     LHSstabilityTest("$\mathcal{H}_\infty^a$",-K_Hinf2)
 #%%TODO:RAM
-def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
+def simulateController(K,labelTitle,ax0,ax1,ax2,ax3,ax4,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
                        plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
     story=[]
     if not callable(K):
@@ -882,7 +906,7 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
     if onlySim:
         return xState,story
     timeStaticFeedback=time.time()-tStart
-    printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
+    printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
     return timeStaticFeedback
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
@@ -1086,31 +1110,8 @@ def genMPC():
 
 
                 
-def genMPCSemiRandomTuning(i_tuning_time_horizon, total_MPC_tuning_time_horizon, i_tuning_gain, total_MPC_tuning_gain):
+def genMPCMultipleTuning(horizon, gain):
     # testing different MPC tuning
-    print("MPC tuning time horizon number: #" + str(i_tuning_time_horizon) + "/" + str(total_MPC_tuning_time_horizon))
-    print("MPC tuning gain number: #" + str(i_tuning_gain) + "/" + str(total_MPC_tuning_gain))
-        
-
-    time_horizon_min = 10
-    time_horizon_max = 100
-    
-    gain_min = 100
-    gain_max = 100000
-    
-    time_horizon_vector = onp.linspace(time_horizon_min, time_horizon_max, num=total_MPC_tuning_time_horizon).astype(int)
-    horizon=time_horizon_vector[i_tuning_time_horizon]
-
-    horizon=50
-    print("MPC tuning time horizon: " + str(horizon))
-
-    gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
-    gain=int(gain_vector[i_tuning_gain])
-    print("MPC tuning gain: " + str(gain))
-
-
-    print("Type of horizon before reshape:", type(horizon), horizon)
-    print("Type of gain before reshape:", type(gain), gain)
     
     @jit
     def costFun(uG,x0,ref):
@@ -1179,18 +1180,43 @@ if benchmark_id==5:
     ## Additionally check if you intend to test multiple MPC laws
 
     if test_alternative_MPC_tuning:
-    
-        fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+        print("Comparing multiple MPC tuning")
+
+
+        time_horizon_min = 10
+        time_horizon_max = 100
+        
+        gain_min = 100
+        gain_max = 100000
+        
+        time_horizon_vector = onp.linspace(time_horizon_min, time_horizon_max, num=total_MPC_tuning_time_horizon).astype(int)
+        gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
+
+        #horizon=50
+
+        #print("Type of horizon before reshape:", type(horizon), horizon)
+        #print("Type of gain before reshape:", type(gain), gain)
+
+
+        fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
         fig.set_size_inches(6, 10) 
         for i_tuning_time_horizon in range(total_MPC_tuning_time_horizon):
             for i_tuning_gain in range(total_MPC_tuning_gain): 
-                computeUMPC=genMPCSemiRandomTuning(i_tuning_time_horizon, total_MPC_tuning_time_horizon, i_tuning_gain, total_MPC_tuning_gain)
-                name_controller = 'MPC_' + str(i_tuning_time_horizon) + '_' + str(i_tuning_gain)
-                simulateController(computeUMPC,name_controller,ax0,ax1,ax2, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+
+                print("MPC tuning time horizon number: #" + str(i_tuning_time_horizon+1) + "/" + str(total_MPC_tuning_time_horizon))
+                print("MPC tuning gain number: #" + str(i_tuning_gain+1) + "/" + str(total_MPC_tuning_gain))
+                horizon=time_horizon_vector[i_tuning_time_horizon]
+                gain=int(gain_vector[i_tuning_gain])
+                print("MPC tuning time horizon: " + str(horizon))
+                print("MPC tuning gain: " + str(gain))
+
+                computeUMPC=genMPCMultipleTuning(horizon, gain)
+                name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
+                simulateController(computeUMPC,name_controller,ax0,ax1,ax2,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
         plt.tight_layout()
         plt.show(block=False)
     
-    print("Test terminated")
+        print("Tuning comparison terminated")
 
 
 
