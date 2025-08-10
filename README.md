@@ -9,9 +9,17 @@ This software framework **automatically** synthesises:
 2. a **formal verification** of the closed-loop stability.
   
   
-## Installation  
-Instructions on installation are available within the ![INSTALLATION](./documentation/INSTALLATION.md/) file.    
+## Step-by-step installation instructions  
+1. Instructions on installation are available within the ![INSTALLATION](./documentation/INSTALLATION.md/) file.    
     
+2. Is-sat runs on `Python 3.11`, `jax 0.4` and `mosek 10.2.` .  
+We provide installation instructions which are not OS-dependent, such that the code can be run on diverse computational platforms.   
+The results were generate on the following OSs:   
+
+|  | OS |
+| :---:   | :---: |
+| Linux Ubuntu 20.04 |  :white_check_mark:  |
+| Linux Ubuntu 24.04 |  :white_check_mark:  |
 
 
 
