@@ -401,7 +401,7 @@ def my_formatter(x, pos):
      return "{}".format(x/100.0)
     
     
-def printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
+def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
     
     
     if plotError:    
@@ -476,6 +476,28 @@ def printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,s
     ax2.set_xlabel('$\mathrm{time [seconds]}$')
 
 
+# Specific function with two subplots defined for plotting and comparing multiple MPC tuning  
+def printStoryMultipleMPC(ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
+    
+    
+    if plotError:    
+        newStory=[]
+        for x in story:
+            error=x[0].ravel()[0:numStatesToPrint]-x[-1].ravel()[0:numStatesToPrint]
+            # print(x)
+            # print(error)
+            newStory+=[[onp.linalg.norm(error)]+x[1:]]
+        # print(newStory)
+        story=newStory
+        
+    labelU=[labelTitle if i==0 else None for i in range(0,inputSize)  ]
+    labelX=[labelTitle+" - "+"$x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelX=[labelTitle if i==0 else None for i   in range(0,numStatesToPrint)]
+    labelR=["ref $x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
+    labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
+
+    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
+
     # Custom axes for multiple MPC tuning comparison
     ax3.set_ylabel('$||\cdot||$ control signal')
     ax3.set_xlabel('$\mathrm{time [seconds]}$')
@@ -499,6 +521,10 @@ def printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,s
         ax4.set_ylabel('state')
 
     pass
+
+
+
+
 #%%
 tau=1-0.001
 def Bemporad():
@@ -860,8 +886,11 @@ def LHSstabilityTest(label,Kgain,threshold=0.1):
 if False:
     LHSstabilityTest("$K_\mathrm{IS-sat}$",Ksat)
     LHSstabilityTest("$\mathcal{H}_\infty^a$",-K_Hinf2)
+
+
+
 #%%TODO:RAM
-def simulateController(K,labelTitle,ax0,ax1,ax2,ax3,ax4,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
+def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
                        plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
     story=[]
     if not callable(K):
@@ -906,10 +935,62 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,ax3,ax4,x0=None,printref=True,st
     if onlySim:
         return xState,story
     timeStaticFeedback=time.time()-tStart
-    printStory(ax0,ax1,ax2,ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
+    printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
     return timeStaticFeedback
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
+
+
+def simulateControllerMultipleMPC(K,labelTitle,ax3,ax4,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
+                       plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
+    story=[]
+    if not callable(K):
+        def computeU(xState,ref):
+            uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
+            return uF
+    else:
+        computeU=K
+        
+    if x0 is None:
+        xState=onp.zeros((1,stateSize))
+        # xState[0,0]=-0.3
+        # xState[0,1]=0.2
+    else:
+        xState=onp.reshape(x0,(1,stateSize))
+    p=onp.ones((1,paraSize))
+    tStart=time.time()
+    sineTrackMult=0
+    if sineTrack:
+        sineTrackMult=1
+    for k in range(0,int(12000*mult)):
+
+        ref=generateRef(k,sineTrackMult)
+        # err=
+        # xState[0,-1]+=-.1
+        # uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
+        # uF=onp.array(K@(xState-ref).T).ravel()
+        uF=computeU(xState,ref)
+        xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
+        p=onp.ones((1,paraSize))
+        if haveFault:
+            p=generateFault(k,mult)
+        
+        if integralTermToTrack>1e-4:
+            ref[0,-2]=integralTermToTrack*1
+            
+        
+        story+=[[xState,uF,p*1,ref]]
+        xState=onp.array(onp.reshape(xN,(1,stateSize)))
+        
+        # print(xState)
+    if onlySim:
+        return xState,story
+    timeStaticFeedback=time.time()-tStart
+    printStoryMultipleMPC(ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
+    return timeStaticFeedback
+# plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
+# plt.figure()
+
 
 
 # plt.figure()
@@ -1212,7 +1293,7 @@ if benchmark_id==5:
 
                 computeUMPC=genMPCMultipleTuning(horizon, gain)
                 name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
-                simulateController(computeUMPC,name_controller,ax0,ax1,ax2,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+                simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
         plt.tight_layout()
         plt.show(block=False)
     
