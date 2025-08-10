@@ -1,34 +1,31 @@
 #
 # The main file to run the IS-sat procedure, and test the syntesised controller.
-# CAVEAT: first, copy Mosek license file into "./mosek_license/mosek.lic".
+# CAVEAT: first, copy Mosek license file into "./mosek_license/mosek.lic". If you followed the provided instructions, this script will run without further steps needed.
 #
+# To run different systems, check: 
+# benchmark_id  
+# and tune the "b"
+# 
 
 import jax
+from jax import numpy as jnp
 jax.config.update("jax_enable_x64", True)
 import sys
 sys.dont_write_bytecode=True
 import mosek
 import os
-from cvxpy.tests.solver_test_helpers import StandardTestLPs
-
-# Set the location of the Mosek license file -- update as necessary
-os.environ['MOSEKLM_LICENSE_FILE'] = './mosek_license/mosek.lic'
-StandardTestLPs.test_lp_0(solver='MOSEK')
-
-import jax
-
-from jax import numpy as jnp
 from functools import partial
 import scipy
-
 import numpy.matlib
 import numpy as onp
 import matplotlib.pyplot as plt
 import jax.experimental
 import time
+from cvxpy.tests.solver_test_helpers import StandardTestLPs
 
-
-
+# Set the location of the Mosek license file -- update as necessary
+os.environ['MOSEKLM_LICENSE_FILE'] = './mosek_license/mosek.lic'
+StandardTestLPs.test_lp_0(solver='MOSEK')
 
 
 plt.rcParams.update({
@@ -54,9 +51,7 @@ class BaseBenchmark:
     def innerDynamic(x0,uT,p,intgralTermRef):
         pass
     
-        
-#%%
-        
+                
 class quasiLPV(BaseBenchmark):
     def __init__(self,enableNoise):       
         super().__init__(0.02,enableNoise)
@@ -207,7 +202,7 @@ class twoStateAUV(BaseBenchmark):
         h3=para[2]
         
         
-        pG=1#40 # actuator range here so thatr sat bound is -1/+1
+        pG=1#40 # actuator range here so that sat bound is -1/+1
         F1_x=jnp.sin(alpha1)*uT[0]*pG
         F2_x=jnp.sin(alpha2)*uT[1]*pG
         F3_x=jnp.sin(alpha3)*uT[2]*pG
@@ -339,7 +334,7 @@ class squaredTank(BaseBenchmark):
 #%%        
     
 
-import sys
+
 benchmark_id=5  
 b=2  # size of the control validity domain 
 switch_dict = {    
@@ -1096,8 +1091,6 @@ if benchmark_id==5:
     plt.tight_layout()
     plt.show()
     print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
-
-
 
 
 # #%%
