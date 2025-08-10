@@ -44,8 +44,12 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.size'] = '14'
 plt.tight_layout()
-plt.show()
-#%%
+plt.show(block=False)
+
+
+''' 
+Classes corresponding to different dynamics and utilities
+'''
 class BaseBenchmark:
     def __init__(self,noiseCov=None,enableNoise=True):
         self.enableNoise=enableNoise
@@ -342,9 +346,15 @@ class squaredTank(BaseBenchmark):
 #%%        
     
 
-
+''' 
+Parameters to be modified
+'''
 benchmark_id=5  
 b=2  # size of the control validity domain 
+test_alternative_MPC_tuning = True
+total_MPC_tuning_time_horizon = 1 # number of different MPC tuning time horizon to explore
+total_MPC_tuning_gain = 2 # number of different MPC tuning gain to explore
+
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
     2: lambda: (glider,2,2,1,scipy.optimize.Bounds(onp.array([-1,-1,-1,-onp.pi/8,-5]),onp.array([1,1,1,onp.pi/8,5])),onp.eye(4)),
@@ -428,7 +438,7 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
     
     # ax0.title.set_text('$||\cdot||$ control effort')
-    ax0.set_ylabel('$||\cdot||$ control\\ signal')
+    ax0.set_ylabel('$||\cdot||$ control\ signal')
     ax0.plot([onp.linalg.norm(x[1].ravel()) for x in story],color='#1f77b4',ls=style,label=str(labelTitle))
     # else:
    
@@ -911,7 +921,7 @@ if benchmark_id==6:
     # fig.set_size_inches(7, 3) 
     # simulateController(-K_Hinf1,'$\mathcal{H}^c_{\infty}$',ax0,ax1,ax2,sineTrack=True,style="dotted")
     # plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
     #%%
     PKinf2=computeEllipsoid(-K_Hinf2)
     PKinf1=computeEllipsoid(-K_Hinf1)
@@ -948,7 +958,7 @@ if benchmark_id==6:
     
     printEllipse(PKinf1[0],'g','$\mathcal{H}^c_{\infty}$',[(0,2)])
     printEllipse(PKinf2[0],'r','$\mathcal{H}^a_{\infty}$',[(0,0)])
-    plt.show()
+    plt.show(block=False)
 
 
 #%%
@@ -1001,6 +1011,8 @@ def H2():
     return P,K
 if benchmark_id==5:
 
+    print("Testing Is-sat, H_2 and H_inf ... ")
+
     PH2,KH2=H2()
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
@@ -1027,7 +1039,7 @@ if benchmark_id==5:
     
     plt.tight_layout()
     ax2.legend()
-    plt.show()
+    plt.show(block=False)
     # PKH2=computeEllipsoid(KH2)
 
 
@@ -1037,6 +1049,12 @@ if benchmark_id==5:
 def genMPC():
     
     horizon=50
+    gain = 10000
+
+    print("Type of horizon before reshape:", type(horizon), horizon)
+    print("Type of gain before reshape:", type(gain), gain)
+
+
     @jit
     def costFun(uG,x0,ref):
         x0S=jnp.reshape(x0*1,(1,stateSize))
@@ -1047,12 +1065,10 @@ def genMPC():
         for r in range(0,horizon):
             x0SN=system.innerDynamic(x0S,uF[r,:],p)
             error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
-            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/10000
+            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/gain
             x0S=x0SN*1
         return error
-                
-                
-            
+
     b=scipy.optimize.Bounds(onp.repeat(Bounds.lb[stateSize:stateSize+inputSize],horizon),
                             onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
     conGra=jax.jit(jax.grad(costFun))
@@ -1069,9 +1085,70 @@ def genMPC():
     return computeUMPC
 
 
+                
+def genMPCSemiRandomTuning(i_tuning_time_horizon, total_MPC_tuning_time_horizon, i_tuning_gain, total_MPC_tuning_gain):
+    # testing different MPC tuning
+    print("MPC tuning time horizon number: #" + str(i_tuning_time_horizon) + "/" + str(total_MPC_tuning_time_horizon))
+    print("MPC tuning gain number: #" + str(i_tuning_gain) + "/" + str(total_MPC_tuning_gain))
+        
 
-computeUMPC=genMPC()
+    time_horizon_min = 10
+    time_horizon_max = 100
+    
+    gain_min = 100
+    gain_max = 100000
+    
+    time_horizon_vector = onp.linspace(time_horizon_min, time_horizon_max, num=total_MPC_tuning_time_horizon).astype(int)
+    horizon=time_horizon_vector[i_tuning_time_horizon]
+
+    horizon=50
+    print("MPC tuning time horizon: " + str(horizon))
+
+    gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
+    gain=int(gain_vector[i_tuning_gain])
+    print("MPC tuning gain: " + str(gain))
+
+
+    print("Type of horizon before reshape:", type(horizon), horizon)
+    print("Type of gain before reshape:", type(gain), gain)
+    
+    @jit
+    def costFun(uG,x0,ref):
+        x0S=jnp.reshape(x0*1,(1,stateSize))
+        error=0
+        # horizon=7
+        p=jnp.ones((1,paraSize))
+        uF=jnp.reshape(uG,(int(horizon),inputSize))
+        for r in range(0,int(horizon)):
+            x0SN=system.innerDynamic(x0S,uF[r,:],p)
+            error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
+            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/gain
+            x0S=x0SN*1
+        return error
+                
+    b=scipy.optimize.Bounds(onp.repeat(Bounds.lb[stateSize:stateSize+inputSize],horizon),
+                            onp.repeat(Bounds.ub[stateSize:stateSize+inputSize],horizon))
+    conGra=jax.jit(jax.grad(costFun))
+    
+    
+    def computeUMPC(xState,ref):
+        lcost= lambda u: (costFun(u,jnp.array(xState*1),jnp.array(ref)),conGra(u,jnp.array(xState*1),jnp.array(ref)))
+        uG=jnp.repeat(jnp.array(Ksat@(xState-ref).T),horizon,1).T.ravel()
+        res=scipy.optimize.minimize(lcost,uG,bounds=b,jac=True, method='L-BFGS-B')
+        # uF=onp.array(K@(xState-ref).T).ravel()
+        uF=onp.reshape(res.x,(int(horizon),int(inputSize)))
+        uF=uF[0,:]*1
+        return uF
+    return computeUMPC
+
+
+
 if benchmark_id==5:
+
+    print("Testing Is-sat and MPC ... ")
+
+    computeUMPC=genMPC()
+
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
@@ -1083,7 +1160,8 @@ if benchmark_id==5:
     plt.tight_layout()
     ax2.legend(loc="lower left")
     #%%
-    
+    print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
+
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
     timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
@@ -1094,8 +1172,27 @@ if benchmark_id==5:
                        printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
     
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
     print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
+
+
+    ## Additionally check if you intend to test multiple MPC laws
+
+    if test_alternative_MPC_tuning:
+    
+        fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
+        fig.set_size_inches(6, 10) 
+        for i_tuning_time_horizon in range(total_MPC_tuning_time_horizon):
+            for i_tuning_gain in range(total_MPC_tuning_gain): 
+                computeUMPC=genMPCSemiRandomTuning(i_tuning_time_horizon, total_MPC_tuning_time_horizon, i_tuning_gain, total_MPC_tuning_gain)
+                name_controller = 'MPC_' + str(i_tuning_time_horizon) + '_' + str(i_tuning_gain)
+                simulateController(computeUMPC,name_controller,ax0,ax1,ax2, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+        plt.tight_layout()
+        plt.show(block=False)
+    
+    print("Test terminated")
+
+
 
 
 # #%%
