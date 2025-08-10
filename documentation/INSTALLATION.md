@@ -17,15 +17,8 @@ pip3 install -r ./requirements.txt
 ```
 
 For completing Mosek installation, refer to: https://docs.mosek.com/latest/install/installation.html
-In short:
-```  
-cd /home/$whoami (TODO:fix)
-cd anaconda3/envs/env_unc_cegis/lib/python3.11/site-packages/mosek/10.2/tools/platform/<PLATFORM>/bin
-```
-"where <PLATFORM> is linux64x86 or linuxaarch64 depending on the version of MOSEK installed." 
    
-Next, you need to activate a Mosek license (refer to: https://docs.mosek.com/latest/install/installation.html).  
-After having activated a valid license, copy the license file `mosek.lic` (do not rename the file) inside the code folder as: `uncertain_cegis/src/mosek_license/mosek.lic`.  
+After having activated a valid Mosek license, copy the license file `mosek.lic` (do not rename the file) inside the code folder as: `uncertain_cegis/src/mosek_license/mosek.lic`.  
   
 Installation of `jax`: the following instructions are tested on a system relying on CPU only. If you have a GPU, `jax` might require an alternative version. TODO: test on a GPU.      
    
@@ -68,12 +61,10 @@ After having activated a valid license, copy the license file `mosek.lic` (do no
 Move to step 2).
 
 
-### 3) Test IS-sat successful installation
+### 2) Test IS-sat successful installation
 These commands will run the training for the *nonlinear AUV* system:
 ```
 cd uncertain_cegis/src
 python3 main_train_is_sat.py  
 ```
-  
-TODO: update new main.    
-   
+    
