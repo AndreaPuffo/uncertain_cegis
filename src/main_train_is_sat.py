@@ -352,8 +352,8 @@ Parameters to be modified
 benchmark_id=5  
 b=2  # size of the control validity domain 
 test_alternative_MPC_tuning = True
-total_MPC_tuning_time_horizon = 5 # number of different MPC tuning time horizon to explore
-total_MPC_tuning_gain = 3 # number of different MPC tuning gain to explore
+total_MPC_tuning_time_horizon = 2 # number of different MPC tuning time horizon to explore
+total_MPC_tuning_gain = 1 # number of different MPC tuning gain to explore
 
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -985,9 +985,22 @@ def simulateControllerMultipleMPC(K,labelTitle,ax3,ax4,x0=None,printref=True,sty
         # print(xState)
     if onlySim:
         return xState,story
+    
+
+    if plotError:
+        # Calc and plot the integral of the absolute error
+        error_norms = [onp.linalg.norm(x[0].ravel()[0:numStatesToPrint] -
+                                       x[-1].ravel()[0:numStatesToPrint])
+                       for x in story]
+        integral_error = onp.sum(onp.abs(error_norms)) 
+    
+    else:
+        integral_error = None  
+
     timeStaticFeedback=time.time()-tStart
     printStoryMultipleMPC(ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
-    return timeStaticFeedback
+
+    return timeStaticFeedback, integral_error
 # plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
 # plt.figure()
 
@@ -1206,6 +1219,8 @@ def genMPCMultipleTuning(horizon, gain):
             error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
             error+=jnp.sum(jnp.ravel(uF[r,:])**2)/gain
             x0S=x0SN*1
+
+
         return error
                 
     b=scipy.optimize.Bounds(onp.repeat(Bounds.lb[stateSize:stateSize+inputSize],horizon),
@@ -1279,6 +1294,9 @@ if benchmark_id==5:
         #print("Type of gain before reshape:", type(gain), gain)
 
 
+        integral_error_results_mpc_tuning = []
+        names_mpc_tuning = []
+
         fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
         fig.set_size_inches(6, 10) 
         for i_tuning_time_horizon in range(total_MPC_tuning_time_horizon):
@@ -1293,10 +1311,24 @@ if benchmark_id==5:
 
                 computeUMPC=genMPCMultipleTuning(horizon, gain)
                 name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
-                simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+                _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+                
+                # Saving performance index (integral error)
+                print("Integral error for " + str(name_controller) + "= " + str(integral_error))
+                integral_error_results_mpc_tuning.append(integral_error)
+                names_mpc_tuning.append(name_controller)
+
         plt.tight_layout()
         plt.show(block=False)
     
+        plt.figure()
+        plt.bar(range(len(integral_error_results_mpc_tuning)), integral_error_results_mpc_tuning)
+        plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=45)
+        plt.ylabel("Perfformance index (lower is better)")
+        plt.title("MPC tuning comparison")
+        plt.tight_layout()
+        plt.show()
+
         print("Tuning comparison terminated")
 
 
