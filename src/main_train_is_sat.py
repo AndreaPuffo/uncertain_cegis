@@ -654,7 +654,7 @@ def Bemporad():
         # result=halo.minimize();
         result={'best_f':res.fun,'best_x':res.x}
         # break
-        print("verfier says: ",result['best_f'])
+        print("verifier says: ",result['best_f'])
         if result['best_f']>=-1e-9*0:
             break
         else:
