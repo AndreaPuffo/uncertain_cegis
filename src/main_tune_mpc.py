@@ -174,12 +174,12 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_MPC_tuning_time_horizon = 2 # number of different MPC tuning time horizon to explore
-total_MPC_tuning_gain = 1 # number of different MPC tuning gain to explore
-time_horizon_min = 10
-time_horizon_max = 100
-gain_min = 100
-gain_max = 100000
+total_MPC_tuning_prediction_horizon = 5 # number of different MPC tuning prediction horizon to explore
+total_MPC_tuning_gain = 5 # number of different MPC tuning gain to explore
+prediction_horizon_min = 10
+prediction_horizon_max = 20 #150
+gain_min = 0.0001
+gain_max = 10
 
 switch_dict = {    
     5: lambda: (AUV,5,4,4,scipy.optimize.Bounds(
@@ -718,7 +718,7 @@ def genMPCMultipleTuning(horizon, gain):
         for r in range(0,int(horizon)):
             x0SN=system.innerDynamic(x0S,uF[r,:],p)
             error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
-            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/gain
+            error+=jnp.sum(jnp.ravel(uF[r,:])**2)*gain
             x0S=x0SN*1
 
 
@@ -745,7 +745,7 @@ if benchmark_id==5:
 
     print("\nComparing multiple MPC tuning")
     
-    time_horizon_vector = onp.linspace(time_horizon_min, time_horizon_max, num=total_MPC_tuning_time_horizon).astype(int)
+    prediction_horizon_vector = onp.linspace(prediction_horizon_min, prediction_horizon_max, num=total_MPC_tuning_prediction_horizon).astype(int)
     gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
 
     #horizon=50
@@ -756,30 +756,30 @@ if benchmark_id==5:
 
     integral_error_results_mpc_tuning = []
     names_mpc_tuning = []
-    time_horizon_mpc_tuning = []
+    prediction_horizon_mpc_tuning = []
     gain_mpc_tuning = []
 
     fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
     fig.set_size_inches(6, 10) 
-    for i_tuning_time_horizon in range(total_MPC_tuning_time_horizon):
+    for i_tuning_prediction_horizon in range(total_MPC_tuning_prediction_horizon):
         for i_tuning_gain in range(total_MPC_tuning_gain): 
 
-            print("MPC tuning time horizon number: #" + str(i_tuning_time_horizon+1) + "/" + str(total_MPC_tuning_time_horizon))
+            print("MPC tuning prediction horizon number: #" + str(i_tuning_prediction_horizon+1) + "/" + str(total_MPC_tuning_prediction_horizon))
             print("MPC tuning gain number: #" + str(i_tuning_gain+1) + "/" + str(total_MPC_tuning_gain))
-            horizon=time_horizon_vector[i_tuning_time_horizon]
-            gain=int(gain_vector[i_tuning_gain])
-            print("MPC tuning time horizon: " + str(horizon))
+            horizon=prediction_horizon_vector[i_tuning_prediction_horizon]
+            gain=gain_vector[i_tuning_gain]
+            print("MPC tuning prediction horizon: " + str(horizon))
             print("MPC tuning gain: " + str(gain))
 
             computeUMPC=genMPCMultipleTuning(horizon, gain)
-            name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
+            name_controller = 'MPC_th' + str(horizon) + '_g' + str(gain)
             _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
             
             # Saving performance index (integral error)
             print("Integral error for " + str(name_controller) + "= " + str(integral_error))
             integral_error_results_mpc_tuning.append(integral_error)
             names_mpc_tuning.append(name_controller)
-            time_horizon_mpc_tuning.append(horizon)
+            prediction_horizon_mpc_tuning.append(horizon)
             gain_mpc_tuning.append(gain)
 
 
@@ -799,7 +799,7 @@ if benchmark_id==5:
     # Extracting best tuning
     index_best_mpc_tuning = integral_error_results_mpc_tuning.index(min(integral_error_results_mpc_tuning))
     print(f"The best MPC obtained is = {names_mpc_tuning[1]}")
-    print(f"Best MPC obtained with time horizon = {time_horizon_mpc_tuning[index_best_mpc_tuning]} and {gain_mpc_tuning[index_best_mpc_tuning]}")
+    print(f"Best MPC obtained with prediction horizon = {prediction_horizon_mpc_tuning[index_best_mpc_tuning]} and gain={gain_mpc_tuning[index_best_mpc_tuning]}")
 
 
     print("\nComparing Is-sat and selected MPC ... ")
@@ -808,7 +808,7 @@ if benchmark_id==5:
     fig.set_size_inches(6, 10) 
 
     # simulating best MPC tuning
-    computeUMPC=genMPCMultipleTuning(time_horizon_mpc_tuning[index_best_mpc_tuning], gain_mpc_tuning[index_best_mpc_tuning])
+    computeUMPC=genMPCMultipleTuning(prediction_horizon_mpc_tuning[index_best_mpc_tuning], gain_mpc_tuning[index_best_mpc_tuning])
     name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
     timeMPC, integral_error = simulateControllerMultipleMPC(computeUMPC,'MPC',ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
 
