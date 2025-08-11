@@ -351,9 +351,6 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-test_alternative_MPC_tuning = True
-total_MPC_tuning_time_horizon = 2 # number of different MPC tuning time horizon to explore
-total_MPC_tuning_gain = 1 # number of different MPC tuning gain to explore
 
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -474,55 +471,6 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
     # ax1.set_xlabel('$\mathrm{[seconds]}$')
     ax2.xaxis.set_major_formatter(my_formatter)
     ax2.set_xlabel('$\mathrm{time [seconds]}$')
-
-
-# Specific function with two subplots defined for plotting and comparing multiple MPC tuning  
-def printStoryMultipleMPC(ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel):
-    
-    
-    if plotError:    
-        newStory=[]
-        for x in story:
-            error=x[0].ravel()[0:numStatesToPrint]-x[-1].ravel()[0:numStatesToPrint]
-            # print(x)
-            # print(error)
-            newStory+=[[onp.linalg.norm(error)]+x[1:]]
-        # print(newStory)
-        story=newStory
-        
-    labelU=[labelTitle if i==0 else None for i in range(0,inputSize)  ]
-    labelX=[labelTitle+" - "+"$x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
-    labelX=[labelTitle if i==0 else None for i   in range(0,numStatesToPrint)]
-    labelR=["ref $x_{}(t)$".format(i+1) for i in range(0,numStatesToPrint)]
-    labelR=["ref" if i==0 else None for i   in range(0,numStatesToPrint)]
-
-    mycycler = (cycler('color', ['#1f77b4', '#ff7f0e', '#d62728', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'][0:inputSize]))
-
-    # Custom axes for multiple MPC tuning comparison
-    ax3.set_ylabel('$||\cdot||$ control signal')
-    ax3.set_xlabel('$\mathrm{time [seconds]}$')
-    ax3.plot([onp.linalg.norm(x[1].ravel()) for x in story],ls=style,label=str(labelTitle))
-    ax3.legend(loc='lower right')
-
-    if plotLog:
-        # story+=[(onp.norm(xState-ref*int(plotError)),uF,p*1,ref)]
-        ax4.semilogy(onp.array([x[0].ravel() for x in story]).reshape((-1,1)),ls=style,label=labelTitle)
-    else:
-        ax4.plot(onp.array([x[0].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),label=labelX[0:len(story[0])],ls=style)
-    
-    if printref and not(plotLog):
-        ax4.plot(onp.array([x[-1].ravel()[0:numStatesToPrint] for x in story]).reshape((-1,numStatesToPrint)),ls='solid',
-                 label=labelR)
-    ax4.xaxis.set_major_formatter(my_formatter)
-    ax4.set_xlabel('$\mathrm{time [seconds]}$')
-    if plotError:
-        ax4.set_ylabel('tracking error')
-    else:
-        ax4.set_ylabel('state')
-
-    pass
-
-
 
 
 #%%
@@ -941,68 +889,7 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 # plt.figure()
 
 
-def simulateControllerMultipleMPC(K,labelTitle,ax3,ax4,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
-                       plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
-    story=[]
-    if not callable(K):
-        def computeU(xState,ref):
-            uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
-            return uF
-    else:
-        computeU=K
-        
-    if x0 is None:
-        xState=onp.zeros((1,stateSize))
-        # xState[0,0]=-0.3
-        # xState[0,1]=0.2
-    else:
-        xState=onp.reshape(x0,(1,stateSize))
-    p=onp.ones((1,paraSize))
-    tStart=time.time()
-    sineTrackMult=0
-    if sineTrack:
-        sineTrackMult=1
-    for k in range(0,int(12000*mult)):
 
-        ref=generateRef(k,sineTrackMult)
-        # err=
-        # xState[0,-1]+=-.1
-        # uF=onp.clip((K@(xState-ref).T).ravel(),Bounds.lb[stateSize:stateSize+inputSize],Bounds.ub[stateSize:stateSize+inputSize])
-        # uF=onp.array(K@(xState-ref).T).ravel()
-        uF=computeU(xState,ref)
-        xN=system.innerDynamic(xState,uF,p,integralTermToTrack)
-        p=onp.ones((1,paraSize))
-        if haveFault:
-            p=generateFault(k,mult)
-        
-        if integralTermToTrack>1e-4:
-            ref[0,-2]=integralTermToTrack*1
-            
-        
-        story+=[[xState,uF,p*1,ref]]
-        xState=onp.array(onp.reshape(xN,(1,stateSize)))
-        
-        # print(xState)
-    if onlySim:
-        return xState,story
-    
-
-    if plotError:
-        # Calc and plot the integral of the absolute error
-        error_norms = [onp.linalg.norm(x[0].ravel()[0:numStatesToPrint] -
-                                       x[-1].ravel()[0:numStatesToPrint])
-                       for x in story]
-        integral_error = onp.sum(onp.abs(error_norms)) 
-    
-    else:
-        integral_error = None  
-
-    timeStaticFeedback=time.time()-tStart
-    printStoryMultipleMPC(ax3,ax4,story,plotError,numStatesToPrint,labelTitle,style,plotLog,printref, haveFault,plotlabel)
-
-    return timeStaticFeedback, integral_error
-# plt.plot(onp.array([x[0].T@P@x[0] for x in story]).reshape((-1,stateSize)))
-# plt.figure()
 
 
 
@@ -1256,80 +1143,11 @@ if benchmark_id==5:
                        printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
     plt.tight_layout()
     ax2.legend(loc="lower left")
+    plt.show(block=True)
     #%%
     print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
 
-    fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
-    fig.set_size_inches(6, 10) 
-    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True)
-    
-    # ax1,ax2,timeMPC=MPCsim()
-    timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True)
-    
-    plt.tight_layout()
-    plt.show(block=False)
-    print("time MPC: {} --- time static: {}".format(timeMPC,timeStaticFeedback))
 
-
-    ## Additionally check if you intend to test multiple MPC laws
-
-    if test_alternative_MPC_tuning:
-        print("Comparing multiple MPC tuning")
-
-
-        time_horizon_min = 10
-        time_horizon_max = 100
-        
-        gain_min = 100
-        gain_max = 100000
-        
-        time_horizon_vector = onp.linspace(time_horizon_min, time_horizon_max, num=total_MPC_tuning_time_horizon).astype(int)
-        gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
-
-        #horizon=50
-
-        #print("Type of horizon before reshape:", type(horizon), horizon)
-        #print("Type of gain before reshape:", type(gain), gain)
-
-
-        integral_error_results_mpc_tuning = []
-        names_mpc_tuning = []
-
-        fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
-        fig.set_size_inches(6, 10) 
-        for i_tuning_time_horizon in range(total_MPC_tuning_time_horizon):
-            for i_tuning_gain in range(total_MPC_tuning_gain): 
-
-                print("MPC tuning time horizon number: #" + str(i_tuning_time_horizon+1) + "/" + str(total_MPC_tuning_time_horizon))
-                print("MPC tuning gain number: #" + str(i_tuning_gain+1) + "/" + str(total_MPC_tuning_gain))
-                horizon=time_horizon_vector[i_tuning_time_horizon]
-                gain=int(gain_vector[i_tuning_gain])
-                print("MPC tuning time horizon: " + str(horizon))
-                print("MPC tuning gain: " + str(gain))
-
-                computeUMPC=genMPCMultipleTuning(horizon, gain)
-                name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
-                _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
-                
-                # Saving performance index (integral error)
-                print("Integral error for " + str(name_controller) + "= " + str(integral_error))
-                integral_error_results_mpc_tuning.append(integral_error)
-                names_mpc_tuning.append(name_controller)
-
-        plt.tight_layout()
-        plt.show(block=False)
-    
-        plt.figure()
-        plt.bar(range(len(integral_error_results_mpc_tuning)), integral_error_results_mpc_tuning)
-        plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=45)
-        plt.ylabel("Perfformance index (lower is better)")
-        plt.title("MPC tuning comparison")
-        plt.tight_layout()
-        plt.show()
-
-        print("Tuning comparison terminated")
 
 
 
