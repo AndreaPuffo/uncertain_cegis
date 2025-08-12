@@ -1,0 +1,29 @@
+The best MPC obtained is = MPC_ph56_g0.03162277660168379
+Best MPC obtained with prediction horizon = 56 and gain = 0.03162277660168379
+The best MPC was synthesised in 0.001127326965332031 s
+The best MPC was simulated in 19.85461163520813 s (for a simulation of 40 s) 
+
+On average, the MPC tuning were synthesised in 0.00694421927134196 +- 0.02155171600391377 s
+On average, the MPC tuning were simulated in 38.64509887827767 +- 23.970954982406518 s (for a simulation of 40 s) 
+
+Comparing Is-sat and selected MPC ... 
+[0, 4000, 8000, 12000]
+[0, 4000, 8000, 12000]
+
+Final comparison: time MPC: 50.051379919052124 --- time static: 0.7123565673828125 (for a simulation of 120 s) 
+
+
+
+2) simulations 120s 
+Tuning comparison terminated
+The best MPC obtained is = MPC_ph56_g0.0001
+Best MPC obtained with prediction horizon = 56 and gain = 0.0001
+The best MPC was synthesised in 0.0006923675537109375 s
+The best MPC was simulated in 60.67743444442749 s
+
+On average, the MPC tuning were synthesised in 0.04033299287160238 +- 0.07063892252592942 s
+On average, the MPC tuning were simulated in 94.86075841055975 +- 61.17691409089994 s
+42.857142857142854 of the MPC simulations are slower than real time (equating to 21 simulations).
+
+Final comparison: time MPC: 68.12088418006897 --- time static: 0.7239375114440918
+
