@@ -772,8 +772,11 @@ def computeEllipsoid(Kext):
 
 
 #%%
-
+t_start_synthesis = time.time()
+print("\n Synthesising IS-sat controller ... ")
 Psat,Ksat,numVertPsat=Bemporad()
+synthesis_time = time.time() - t_start_synthesis
+print(f"\n Terminated synthesis of IS-sat controller in {synthesis_time} seconds.\n\n")
 
 
 #%%
@@ -1054,7 +1057,7 @@ if benchmark_id==5:
 def genMPC():
     
     horizon=50
-    gain = 10000
+    gain = 0.0001
 
     print("Type of horizon before reshape:", type(horizon), horizon)
     print("Type of gain before reshape:", type(gain), gain)
@@ -1104,7 +1107,7 @@ def genMPCMultipleTuning(horizon, gain):
         for r in range(0,int(horizon)):
             x0SN=system.innerDynamic(x0S,uF[r,:],p)
             error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
-            error+=jnp.sum(jnp.ravel(uF[r,:])**2)/gain
+            error+=jnp.sum(jnp.ravel(uF[r,:])**2)*gain
             x0S=x0SN*1
 
 
