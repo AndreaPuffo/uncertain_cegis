@@ -1,6 +1,6 @@
-# Cegis for Uncertain Systems using LMIs
+# IS-sat: a CEGIS-based approach to synthesise robust control functions for uncertain systems affected by actuator faults using LMIs
 This repository contains the code for the paper:  
-**Cegis for Uncertain Systems using LMIs**
+**Fault-tolerant control of nonlinear systems: An inductive synthesis approach**
 
   
 ## Scope of the code
@@ -14,7 +14,7 @@ This software framework **automatically** synthesises:
     
 2. Is-sat runs on `Python 3.11`, `jax 0.4` and `mosek 10.2.` .  
 We provide installation instructions which are not OS-dependent, such that the code can be run on diverse computational platforms.   
-The results were generate on the following OSs:   
+The results were generate and verified on the following OSs:   
 
 |  | OS |
 | :---:   | :---: |
