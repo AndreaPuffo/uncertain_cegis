@@ -174,12 +174,18 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_MPC_tuning_prediction_horizon = 5 # number of different MPC tuning prediction horizon to explore
-total_MPC_tuning_gain = 5 # number of different MPC tuning gain to explore
+total_MPC_tuning_prediction_horizon = 3 # number of different MPC tuning prediction horizon to explore
+total_MPC_tuning_gain = 3 # number of different MPC tuning gain to explore
 prediction_horizon_min = 10
-prediction_horizon_max = 20 #150
+prediction_horizon_max = 150
 gain_min = 0.0001
 gain_max = 10
+synthesise_new_IS_sat = False # if false use the values provided in Ksat below
+Ksat = onp.array([[ -50.98781602,  -48.44657148,  591.40640211,  114.77740694,    5.48530836],
+         [  45.53251654,  -45.81310304,  540.44618274,  107.24054371,    5.12516529],
+         [  46.94591829,  -47.94972841, -540.43310069, -104.29568136,   -4.98424422],
+         [ -41.54824799,  -44.53343709, -492.38032439,  -96.35366138,   -4.60431652]])
+
 
 switch_dict = {    
     5: lambda: (AUV,5,4,4,scipy.optimize.Bounds(
@@ -494,8 +500,13 @@ def Bemporad():
 
 
 #%%
-
-Psat,Ksat,numVertPsat=Bemporad()
+if synthesise_new_IS_sat:
+    t_start_synthesis = time.time()
+    print("\n Synthesising IS-sat controller ... ")
+    Psat,Ksat,numVertPsat=Bemporad()
+    synthesis_time = time.time() - t_start_synthesis
+    print(f"\n Terminated synthesis of IS-sat controller in {synthesis_time} seconds.\n\n")
+    print(Ksat)
 
 
 
@@ -550,7 +561,7 @@ if False:
 
 
 def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
-                       plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
+                       plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1,simTime=12000):
     story=[]
     if not callable(K):
         def computeU(xState,ref):
@@ -570,7 +581,7 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
     sineTrackMult=0
     if sineTrack:
         sineTrackMult=1
-    for k in range(0,int(4000*mult)):
+    for k in range(0,int(simTime*mult)):
 
         ref=generateRef(k,sineTrackMult)
         # err=
@@ -667,8 +678,8 @@ def simulateControllerMultipleMPC(K,labelTitle,ax3,ax4,x0=None,printref=True,sty
 
 def genMPC():
     
-    horizon=50
-    gain = 10000
+    horizon=56
+    gain = 0.0001
 
     print("Type of horizon before reshape:", type(horizon), horizon)
     print("Type of gain before reshape:", type(gain), gain)
@@ -746,7 +757,7 @@ if benchmark_id==5:
     print("\nComparing multiple MPC tuning")
     
     prediction_horizon_vector = onp.linspace(prediction_horizon_min, prediction_horizon_max, num=total_MPC_tuning_prediction_horizon).astype(int)
-    gain_vector = onp.linspace(gain_min, gain_max, num=total_MPC_tuning_gain)
+    gain_vector = onp.logspace(onp.log10(gain_min), onp.log10(gain_max), num=total_MPC_tuning_gain)
 
     #horizon=50
 
@@ -764,7 +775,7 @@ if benchmark_id==5:
     for i_tuning_prediction_horizon in range(total_MPC_tuning_prediction_horizon):
         for i_tuning_gain in range(total_MPC_tuning_gain): 
 
-            print("MPC tuning prediction horizon number: #" + str(i_tuning_prediction_horizon+1) + "/" + str(total_MPC_tuning_prediction_horizon))
+            print("\nMPC tuning prediction horizon number: #" + str(i_tuning_prediction_horizon+1) + "/" + str(total_MPC_tuning_prediction_horizon))
             print("MPC tuning gain number: #" + str(i_tuning_gain+1) + "/" + str(total_MPC_tuning_gain))
             horizon=prediction_horizon_vector[i_tuning_prediction_horizon]
             gain=gain_vector[i_tuning_gain]
@@ -772,7 +783,7 @@ if benchmark_id==5:
             print("MPC tuning gain: " + str(gain))
 
             computeUMPC=genMPCMultipleTuning(horizon, gain)
-            name_controller = 'MPC_th' + str(horizon) + '_g' + str(gain)
+            name_controller = 'MPC_ph' + str(horizon) + '_g' + str(gain)
             _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
             
             # Saving performance index (integral error)
@@ -788,18 +799,34 @@ if benchmark_id==5:
 
     plt.figure()
     plt.bar(range(len(integral_error_results_mpc_tuning)), integral_error_results_mpc_tuning)
-    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=45)
+    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
     plt.ylabel("Perfformance index (lower is better)")
     plt.title("MPC tuning comparison")
     plt.tight_layout()
     plt.show()
 
+
+    plt.figure()
+    plt.bar(range(len(integral_error_results_mpc_tuning)), sorted(integral_error_results_mpc_tuning))
+    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
+    plt.ylabel("Performance index (lower is better)")
+    plt.title("MPC tuning comparison sorted")
+    plt.tight_layout()
+    plt.show()
+
+
     print("Tuning comparison terminated")
+
+
+
 
     # Extracting best tuning
     index_best_mpc_tuning = integral_error_results_mpc_tuning.index(min(integral_error_results_mpc_tuning))
-    print(f"The best MPC obtained is = {names_mpc_tuning[1]}")
+    print(f"The best MPC obtained is = {names_mpc_tuning[index_best_mpc_tuning]}")
     print(f"Best MPC obtained with prediction horizon = {prediction_horizon_mpc_tuning[index_best_mpc_tuning]} and gain={gain_mpc_tuning[index_best_mpc_tuning]}")
+
+
+
 
 
     print("\nComparing Is-sat and selected MPC ... ")
@@ -809,11 +836,15 @@ if benchmark_id==5:
 
     # simulating best MPC tuning
     computeUMPC=genMPCMultipleTuning(prediction_horizon_mpc_tuning[index_best_mpc_tuning], gain_mpc_tuning[index_best_mpc_tuning])
-    name_controller = 'MPC_' + str(horizon) + '_' + str(gain)
-    timeMPC, integral_error = simulateControllerMultipleMPC(computeUMPC,'MPC',ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+    name_best_controller = 'MPC_ph' + str(prediction_horizon_mpc_tuning[index_best_mpc_tuning]) + '_' + str(gain_mpc_tuning[index_best_mpc_tuning])
+    #timeMPC, integral_error = simulateControllerMultipleMPC(computeUMPC,'MPC',ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+
+    timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=120000)
+    
 
     timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=120000)
     plt.tight_layout()
     ax2.legend(loc="lower left")
     plt.show(block=True)
