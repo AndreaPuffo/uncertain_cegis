@@ -174,8 +174,8 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_MPC_tuning_prediction_horizon = 3 # number of different MPC tuning prediction horizon to explore
-total_MPC_tuning_gain = 3 # number of different MPC tuning gain to explore
+total_MPC_tuning_prediction_horizon = 7 # number of different MPC tuning prediction horizon to explore
+total_MPC_tuning_gain = 7 # number of different MPC tuning gain to explore
 prediction_horizon_min = 10
 prediction_horizon_max = 150
 gain_min = 0.0001
@@ -728,7 +728,7 @@ def genMPCMultipleTuning(horizon, gain):
         uF=jnp.reshape(uG,(int(horizon),inputSize))
         for r in range(0,int(horizon)):
             x0SN=system.innerDynamic(x0S,uF[r,:],p)
-            error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize))))
+            error+=jnp.sum(jnp.square(x0SN.reshape((1,stateSize))-ref.reshape((1,stateSize)))) # this could be multiplied by Q
             error+=jnp.sum(jnp.ravel(uF[r,:])**2)*gain
             x0S=x0SN*1
 
@@ -771,7 +771,7 @@ if benchmark_id==5:
     gain_mpc_tuning = []
 
     fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
-    fig.set_size_inches(6, 10) 
+    #fig.set_size_inches(6, 10) 
     for i_tuning_prediction_horizon in range(total_MPC_tuning_prediction_horizon):
         for i_tuning_gain in range(total_MPC_tuning_gain): 
 
@@ -803,7 +803,7 @@ if benchmark_id==5:
     plt.ylabel("Perfformance index (lower is better)")
     plt.title("MPC tuning comparison")
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
 
 
     # Discarding unstable tuning 
@@ -813,13 +813,18 @@ if benchmark_id==5:
     stable_prediction_horizon_mpc_tuning = [n for n, m in zip(prediction_horizon_mpc_tuning, mask_unstable_tuning) if m]
     stable_gain_mpc_tuning = [n for n, m in zip(gain_mpc_tuning, mask_unstable_tuning) if m]
 
-    plt.figure()
-    plt.bar(range(len(stable_integral_error_results_mpc_tuning)), sorted(stable_integral_error_results_mpc_tuning))
-    plt.xticks(range(len(stable_names_mpc_tuning)), stable_names_mpc_tuning, rotation=90)
+    tuning_pairs = zip(stable_integral_error_results_mpc_tuning, stable_names_mpc_tuning)
+    tuning_pairs_sorted = sorted(tuning_pairs)
+    stable_integral_error_results_mpc_tuning_sorted, stable_names_mpc_tuning_sorted = zip(*tuning_pairs_sorted)
+
+
+    plt.figure(dpi=400)
+    plt.bar(range(len(stable_integral_error_results_mpc_tuning_sorted)), stable_integral_error_results_mpc_tuning_sorted)
+    plt.xticks(range(len(stable_names_mpc_tuning_sorted)), stable_names_mpc_tuning_sorted, rotation=90)
     plt.ylabel("Performance index (lower is better)")
     plt.title("MPC tuning comparison sorted")
     plt.tight_layout()
-    plt.show()
+    plt.show(block=False)
 
 
     print("Tuning comparison terminated")
@@ -828,7 +833,7 @@ if benchmark_id==5:
     # Extracting best tuning
     index_best_mpc_tuning = integral_error_results_mpc_tuning.index(min(integral_error_results_mpc_tuning))
     print(f"The best MPC obtained is = {names_mpc_tuning[index_best_mpc_tuning]}")
-    print(f"Best MPC obtained with prediction horizon = {prediction_horizon_mpc_tuning[index_best_mpc_tuning]} and gain={gain_mpc_tuning[index_best_mpc_tuning]}")
+    print(f"Best MPC obtained with prediction horizon = {prediction_horizon_mpc_tuning[index_best_mpc_tuning]} and gain = {gain_mpc_tuning[index_best_mpc_tuning]}")
 
 
 
@@ -845,11 +850,11 @@ if benchmark_id==5:
     #timeMPC, integral_error = simulateControllerMultipleMPC(computeUMPC,'MPC',ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
 
     timeMPC=simulateController(computeUMPC,'MPC',ax0,ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=120000)
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=12000)
     
 
     timeStaticFeedback=simulateController(Ksat,'$K_\mathrm{IS-sat}$',ax0,ax1,ax2,
-                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=120000)
+                       printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=12000)
     plt.tight_layout()
     ax2.legend(loc="lower left")
     plt.show(block=True)
