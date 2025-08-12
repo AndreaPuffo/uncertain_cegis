@@ -165,9 +165,6 @@ class AUV(BaseBenchmark):
         
         return xN.reshape((stateSize,1))
 
-        
-
-    
 
 ''' 
 Parameters to be modified
@@ -631,7 +628,7 @@ def simulateControllerMultipleMPC(K,labelTitle,ax3,ax4,x0=None,printref=True,sty
     sineTrackMult=0
     if sineTrack:
         sineTrackMult=1
-    for k in range(0,int(4000*mult)):
+    for k in range(0,int(12000*mult)):
 
         ref=generateRef(k,sineTrackMult)
         # err=
@@ -769,6 +766,8 @@ if benchmark_id==5:
     names_mpc_tuning = []
     prediction_horizon_mpc_tuning = []
     gain_mpc_tuning = []
+    time_synthesis_mpc_tuning = []
+    time_simulation_mpc_tuning = []
 
     fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
     #fig.set_size_inches(6, 10) 
@@ -782,17 +781,23 @@ if benchmark_id==5:
             print("MPC tuning prediction horizon: " + str(horizon))
             print("MPC tuning gain: " + str(gain))
 
+            t_start_synthesis_mpc = time.time()           
             computeUMPC=genMPCMultipleTuning(horizon, gain)
+            synthesis_time = time.time() - t_start_synthesis_mpc
+
             name_controller = 'MPC_ph' + str(horizon) + '_g' + str(gain)
-            _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
-            
+            t_start_simulation_mpc = time.time()           
+            _, integral_error = simulateControllerMultipleMPC(computeUMPC,name_controller,ax3,ax4, printref=False,numStatesToPrint=stateSize-1,haveFault=False,plotlabel=True,style='dashed',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True)
+            simulation_time = time.time() - t_start_simulation_mpc
+
             # Saving performance index (integral error)
             print("Integral error for " + str(name_controller) + "= " + str(integral_error))
             integral_error_results_mpc_tuning.append(integral_error)
             names_mpc_tuning.append(name_controller)
             prediction_horizon_mpc_tuning.append(horizon)
             gain_mpc_tuning.append(gain)
-
+            time_synthesis_mpc_tuning.append(synthesis_time)
+            time_simulation_mpc_tuning.append(simulation_time)
 
     plt.tight_layout()
     plt.show(block=False)
@@ -812,13 +817,15 @@ if benchmark_id==5:
     stable_names_mpc_tuning = [n for n, m in zip(names_mpc_tuning, mask_unstable_tuning) if m]
     stable_prediction_horizon_mpc_tuning = [n for n, m in zip(prediction_horizon_mpc_tuning, mask_unstable_tuning) if m]
     stable_gain_mpc_tuning = [n for n, m in zip(gain_mpc_tuning, mask_unstable_tuning) if m]
+    stable_time_synthesis_mpc_tuning = [n for n, m in zip(time_synthesis_mpc_tuning, mask_unstable_tuning) if m]
+    stable_time_simulation_mpc_tuning = [n for n, m in zip(time_simulation_mpc_tuning, mask_unstable_tuning) if m]
 
     tuning_pairs = zip(stable_integral_error_results_mpc_tuning, stable_names_mpc_tuning)
     tuning_pairs_sorted = sorted(tuning_pairs)
     stable_integral_error_results_mpc_tuning_sorted, stable_names_mpc_tuning_sorted = zip(*tuning_pairs_sorted)
 
-
-    plt.figure(dpi=400)
+    # Performance analysis
+    plt.figure(dpi=300)
     plt.bar(range(len(stable_integral_error_results_mpc_tuning_sorted)), stable_integral_error_results_mpc_tuning_sorted)
     plt.xticks(range(len(stable_names_mpc_tuning_sorted)), stable_names_mpc_tuning_sorted, rotation=90)
     plt.ylabel("Performance index (lower is better)")
@@ -826,6 +833,26 @@ if benchmark_id==5:
     plt.tight_layout()
     plt.show(block=False)
 
+    # Time analysis
+    plt.figure(dpi=300)
+    plt.bar(range(len(time_simulation_mpc_tuning)), time_simulation_mpc_tuning)
+    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
+    plt.axhline(y=120, color='red', linestyle='--', label='real time')
+    plt.ylabel("time [s]")
+    plt.title("MPC simulation time")
+    plt.tight_layout()
+    plt.show(block=False)
+
+    plt.figure(dpi=300)
+    plt.bar(range(len(time_synthesis_mpc_tuning)), time_synthesis_mpc_tuning)
+    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
+    plt.ylabel("time [s]")
+    plt.title("MPC synthesis time")
+    plt.tight_layout()
+    plt.show(block=False)
+
+    time_simulation_slow = [x for x in time_simulation_mpc_tuning if float(x) >= 120]
+    number_simulations_too_slow = len(time_simulation_slow)/len(time_simulation_mpc_tuning)*100
 
     print("Tuning comparison terminated")
 
@@ -834,10 +861,12 @@ if benchmark_id==5:
     index_best_mpc_tuning = integral_error_results_mpc_tuning.index(min(integral_error_results_mpc_tuning))
     print(f"The best MPC obtained is = {names_mpc_tuning[index_best_mpc_tuning]}")
     print(f"Best MPC obtained with prediction horizon = {prediction_horizon_mpc_tuning[index_best_mpc_tuning]} and gain = {gain_mpc_tuning[index_best_mpc_tuning]}")
+    print(f"The best MPC was synthesised in {time_synthesis_mpc_tuning[index_best_mpc_tuning]} s")
+    print(f"The best MPC was simulated in {time_simulation_mpc_tuning[index_best_mpc_tuning]} s")
 
-
-
-
+    print(f"\nOn average, the MPC tuning were synthesised in {onp.mean(stable_time_synthesis_mpc_tuning)} +- {onp.std(stable_time_synthesis_mpc_tuning)} s")
+    print(f"On average, the MPC tuning were simulated in {onp.mean(stable_time_simulation_mpc_tuning)} +- {onp.std(stable_time_simulation_mpc_tuning)} s")
+    print(f"{number_simulations_too_slow} of the MPC simulations are slower than real time (equating to {len(time_simulation_slow)} simulations).")
 
     print("\nComparing Is-sat and selected MPC ... ")
 
