@@ -806,9 +806,16 @@ if benchmark_id==5:
     plt.show()
 
 
+    # Discarding unstable tuning 
+    mask_unstable_tuning = ~onp.isnan(integral_error_results_mpc_tuning)
+    stable_integral_error_results_mpc_tuning = [x for x, m in zip(integral_error_results_mpc_tuning, mask_unstable_tuning) if m]
+    stable_names_mpc_tuning = [n for n, m in zip(names_mpc_tuning, mask_unstable_tuning) if m]
+    stable_prediction_horizon_mpc_tuning = [n for n, m in zip(prediction_horizon_mpc_tuning, mask_unstable_tuning) if m]
+    stable_gain_mpc_tuning = [n for n, m in zip(gain_mpc_tuning, mask_unstable_tuning) if m]
+
     plt.figure()
-    plt.bar(range(len(integral_error_results_mpc_tuning)), sorted(integral_error_results_mpc_tuning))
-    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
+    plt.bar(range(len(stable_integral_error_results_mpc_tuning)), sorted(stable_integral_error_results_mpc_tuning))
+    plt.xticks(range(len(stable_names_mpc_tuning)), stable_names_mpc_tuning, rotation=90)
     plt.ylabel("Performance index (lower is better)")
     plt.title("MPC tuning comparison sorted")
     plt.tight_layout()
@@ -816,8 +823,6 @@ if benchmark_id==5:
 
 
     print("Tuning comparison terminated")
-
-
 
 
     # Extracting best tuning
