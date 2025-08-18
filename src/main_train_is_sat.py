@@ -349,7 +349,7 @@ class squaredTank(BaseBenchmark):
 ''' 
 Parameters to be modified
 '''
-benchmark_id=5  
+benchmark_id=5
 b=2  # size of the control validity domain 
 
 switch_dict = {    
@@ -777,6 +777,8 @@ print("\n Synthesising IS-sat controller ... ")
 Psat,Ksat,numVertPsat=Bemporad()
 synthesis_time = time.time() - t_start_synthesis
 print(f"\n Terminated synthesis of IS-sat controller in {synthesis_time} seconds.\n\n")
+print("Ksat = ")
+print(Ksat)
 
 
 #%%
@@ -840,7 +842,6 @@ if False:
 
 
 
-#%%TODO:RAM
 def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',onlySim=False,plotLog=False,integralTermToTrack=0.2,
                        plotlabel=False,plotError=False,numStatesToPrint=stateSize,haveFault=True,sineTrack=False,mult=1):
     story=[]
@@ -1053,7 +1054,6 @@ if benchmark_id==5:
 
 
 #%%
-#TODO:RAM
 def genMPC():
     
     horizon=50
