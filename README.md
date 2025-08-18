@@ -23,8 +23,8 @@ The results were generate and verified on the following OSs:
 
 
 ## Overview of the code
-1. To reproduce the results of the paper, synthesise a new IS-sat control law for the provided examples of for your own system, check this ![script](.src/main_train_is_sat.py).  
+1. To reproduce the results of the paper, synthesise a new IS-sat control law for the provided examples of for your own system, check this ![script](./src/main_train_is_sat.py).  
   
-2. To reproduce the nonlinear MPC tuning of the paper, or to tune your own nonlinear MPC control law, check this ![script](.src/main_tune_mpc.py).  
+2. To reproduce the nonlinear MPC tuning of the paper, or to tune your own nonlinear MPC control law, check this ![script](./src/main_tune_mpc.py).  
   
-3. To explore different IS-sat tuning, check this ![script](.src/main_tune_is_sat.py).  
+3. To explore different IS-sat tuning, check this ![script](./src/main_tune_is_sat.py).  
