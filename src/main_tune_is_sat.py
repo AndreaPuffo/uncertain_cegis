@@ -170,8 +170,8 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_issat_epsilon = 2 # number of different epsilon values to explore
-total_issat_eta = 1 # number of different eta values to explore
+total_issat_epsilon = 10 # number of different epsilon values to explore
+total_issat_eta = 10 # number of different eta values to explore
 epsilon_min = 0.0001
 epsilon_max = 0.01
 eta_min = 5
@@ -652,7 +652,7 @@ if benchmark_id==5:
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
 
-    for iSim in range(KSat_history):
+    for iSim in range(success_history.__len__()):
 
         if success_history[iSim] == True:
             # simulate the stable control laws 
@@ -682,16 +682,7 @@ if benchmark_id==5:
     plt.title("MPC simulation time")
     plt.tight_layout()
     plt.show(block=False)
-
-    plt.figure(dpi=300)
-    plt.bar(range(len(time_synthesis_mpc_tuning)), time_synthesis_mpc_tuning)
-    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
-    plt.ylabel("time [s]")
-    plt.title("MPC synthesis time")
-    plt.tight_layout()
-    plt.show(block=False)
-    '''
-
+'''
 
 
 
