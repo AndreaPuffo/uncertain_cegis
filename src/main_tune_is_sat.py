@@ -170,8 +170,8 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_issat_epsilon = 3 # number of different epsilon values to explore
-total_issat_eta = 2 # number of different eta values to explore
+total_issat_epsilon = 2 # number of different epsilon values to explore
+total_issat_eta = 1 # number of different eta values to explore
 epsilon_min = 0.0001
 epsilon_max = 0.01
 eta_min = 5
@@ -584,8 +584,8 @@ if benchmark_id==5:
 
     fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
     #fig.set_size_inches(6, 10) 
-    for i_tuning_eps in range(total_issat_eta):
-        for i_tuning_eta in range(total_issat_epsilon): 
+    for i_tuning_eps in range(total_issat_epsilon):
+        for i_tuning_eta in range(total_issat_eta): 
 
             epsilon=eps_vector[i_tuning_eps]
             eta=eta_vector[i_tuning_eta]
