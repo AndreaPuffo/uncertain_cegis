@@ -580,7 +580,10 @@ if benchmark_id==5:
     time_simulation_issat = []
     success_history = []
     eps_success_history = []
-    eta_success_hisroty = []
+    eta_success_history = []
+    name_history = []
+    no_iteration_history = []
+
 
     fig, (ax3,ax4)=plt.subplots(2, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [3, 3]})
     #fig.set_size_inches(6, 10) 
@@ -602,12 +605,11 @@ if benchmark_id==5:
 
                 name_controller = 'IS-sat_eps' + str(epsilon) + '_eta' + str(eta)
 
-
                 t_start_synthesis_mpc = time.time()   
                 t_start_synthesis = time.time()
                 print("\n Synthesising IS-sat controller ... ")
 
-                Psat, Ksat,numVertPsat, numIterations, errorSynthesis = SynthesiseISsat(verbose_IS_sat, eta, epsilon)
+                Psat, Ksat, numVertPsat, numIterations, errorSynthesis = SynthesiseISsat(verbose_IS_sat, eta, epsilon)
                 synthesis_time = time.time() - t_start_synthesis
                 print(f"\n Terminated synthesis of IS-sat controller in {synthesis_time} seconds.\n\n")
 
@@ -620,7 +622,9 @@ if benchmark_id==5:
                     KSat_history.append(Ksat)
                     time_synthesis_issat.append(synthesis_time)
                     eps_success_history.append(epsilon)
-                    eta_success_hisroty.append(eta)
+                    eta_success_history.append(eta)
+                    name_history.append(name_controller)
+                    no_iteration_history.append(numIterations)
 
                 else: 
                     print("Error during synthesis!")
@@ -630,10 +634,9 @@ if benchmark_id==5:
                     KSat_history.append(float("nan"))
                     time_synthesis_issat.append(synthesis_time)
                     eps_success_history.append(epsilon)
-                    eta_success_hisroty.append(eta)
-
-                time_synthesis_issat.append(synthesis_time)
-
+                    eta_success_history.append(eta)
+                    name_history.append(name_controller)
+                    no_iteration_history.append(numIterations)
 
             else: 
                 print("Combination of epsilon and eta not valid")
@@ -641,16 +644,20 @@ if benchmark_id==5:
                 KSat_history.append(float("nan"))
                 time_synthesis_issat.append(synthesis_time)
                 eps_success_history.append(epsilon)
-                eta_success_hisroty.append(eta)
+                eta_success_history.append(eta)
+                name_history.append(name_controller)
+                no_iteration_history.append(numIterations)
 
-
-    # Simulation
+    # Simulation of the successful trained control laws
     fig, (ax0,ax1, ax2)=plt.subplots(3, 1, sharey=False,dpi=160,gridspec_kw={'height_ratios': [2, 3, 3]})
     fig.set_size_inches(6, 10) 
 
-    simulation_time=simulateController(Ksat, name_controller ,ax0,ax1,ax2,
-                    printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=12000)
-    
+    for iSim in range(KSat_history):
+
+        if success_history[iSim] == True:
+            # simulate the stable control laws 
+            simulation_time=simulateController(KSat_history[iSim], name_history[iSim],ax0,ax1,ax2,
+                            printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=12000)
     plt.tight_layout()
     ax2.legend(loc="lower left")
     plt.show(block=True)
