@@ -351,6 +351,7 @@ Parameters to be modified
 '''
 benchmark_id=5
 b=2  # size of the control validity domain 
+verbose_IS_sat=False  # enable if interested in monitoring the status of the synthesis
 
 switch_dict = {    
     # 1: lambda: (squaredTank,2,1,0,scipy.optimize.Bounds(onp.ones((3,))*0.01,onp.ones((3,))*0+5)),
@@ -475,7 +476,7 @@ def printStory(ax0,ax1,ax2,story,plotError,numStatesToPrint,labelTitle,style,plo
 
 #%%
 tau=1-0.001
-def Bemporad():
+def Bemporad(verbose_IS_sat):
 
    
     x=onp.zeros((stateSize))+1;
@@ -536,14 +537,17 @@ def Bemporad():
             prob = cp.Problem(cp.Minimize(-cp.trace(Q)), constraints)
             prob.solve(solver='MOSEK',verbose=False)
             
-            print("The optimal value is", prob.value)
+            if verbose_IS_sat:
+                print("The optimal value is", prob.value)
             # print("A solution X is")
             P=onp.linalg.inv(Q.value);
             K=(Y.value@P)
             H=Z.value@P 
             for AB in setOfVertices:
                 A,B=AB
-                print(onp.linalg.eigvals(A+B@K))
+                if verbose_IS_sat:
+                    print("Eigenvalues A+BK = ")
+                    print(onp.linalg.eigvals(A+B@K))
                 assert(onp.all(onp.abs(onp.linalg.eigvals(A+B@K))<1))
             return P,K,H
         
@@ -601,9 +605,11 @@ def Bemporad():
         # halo = HALO(costEig, [[Bounds.lb[i],Bounds.ub[i]] for i in range(0,len(Bounds.lb))], max_feval, max_iter, beta, local_optimizer, verbose)
         # result=halo.minimize();
         result={'best_f':res.fun,'best_x':res.x}
-        # break
-        print("verifier says: ",result['best_f'])
+        if verbose_IS_sat:
+            print("verifier says: ",result['best_f'])
         if result['best_f']>=-1e-9*0:
+            print("Number of iterations: ")
+            print(trackingNumberOfiterations)
             break
         else:
             x=result['best_x']
@@ -617,7 +623,8 @@ def Bemporad():
                 para_v[k]=p[0:1];
                 setOfVertices+=[computeAB(xState,u,para_v)]
         trackingNumberOfiterations+=1
-    print(trackingNumberOfiterations)
+        print(f"Iteration #{trackingNumberOfiterations} completed.\n")
+        
     return P,K,len(setOfVertices)
     
     
@@ -774,7 +781,7 @@ def computeEllipsoid(Kext):
 #%%
 t_start_synthesis = time.time()
 print("\n Synthesising IS-sat controller ... ")
-Psat,Ksat,numVertPsat=Bemporad()
+Psat,Ksat,numVertPsat=Bemporad(verbose_IS_sat)
 synthesis_time = time.time() - t_start_synthesis
 print(f"\n Terminated synthesis of IS-sat controller in {synthesis_time} seconds.\n\n")
 print("Ksat = ")
