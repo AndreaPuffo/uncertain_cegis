@@ -170,12 +170,12 @@ Parameters to be modified
 '''
 benchmark_id=5  
 b=2  # size of the control validity domain 
-total_issat_epsilon = 10 # number of different epsilon values to explore
-total_issat_eta = 10 # number of different eta values to explore
+total_issat_epsilon = 7 # number of different epsilon values to explore
+total_issat_eta = 7 # number of different eta values to explore
 epsilon_min = 0.0001
-epsilon_max = 0.01
-eta_min = 5
-eta_max = 5000
+epsilon_max = 10.0
+eta_min = 0.005
+eta_max = 500.0
 verbose_IS_sat=False  # enable if interested in monitoring the status of the synthesis
 
 tau = 1-0.001
@@ -360,7 +360,13 @@ def SynthesiseISsat(verbose_IS_sat, eta, epsilon):
                         
                     ]
             prob = cp.Problem(cp.Minimize(-cp.trace(Q)), constraints)
-            prob.solve(solver='MOSEK',verbose=False)
+            
+            try:
+                prob.solve(solver='MOSEK',verbose=False)
+            except:
+                print("Problem with Mosek solver!")
+                errorSynthesis = True
+                return None, None, None   
             
             if verbose_IS_sat:
                 print("The optimal value is", prob.value)
@@ -571,8 +577,8 @@ def simulateController(K,labelTitle,ax0,ax1,ax2,x0=None,printref=True,style='-',
 if benchmark_id==5:
 
     print("\nComparing multiple IS-sat tuning")
-    eps_vector = onp.linspace(epsilon_min, epsilon_max, num=total_issat_epsilon)
-    eta_vector = onp.linspace(eta_min, eta_max, num=total_issat_eta)
+    eps_vector = onp.logspace(onp.log10(epsilon_min), onp.log10(epsilon_max), num=total_issat_epsilon)
+    eta_vector = onp.logspace(onp.log10(eta_min), onp.log10(eta_max), num=total_issat_eta)
 
     KSat_history = []
     time_synthesis = []
@@ -659,19 +665,32 @@ if benchmark_id==5:
             simulation_time=simulateController(KSat_history[iSim], name_history[iSim],ax0,ax1,ax2,
                             printref=False,numStatesToPrint=stateSize-1,haveFault=True,plotlabel=True,style='solid',sineTrack=True,x0=onp.ones((1,stateSize))+2,plotError=True,plotLog=True,simTime=12000)
     plt.tight_layout()
-    ax2.legend(loc="lower left")
+    ax2.legend()
     plt.show(block=True)
 
 
-    '''
+
+    # Remove None values and plotting the iterations
+    values = []
+    labels = []
+    for v, name in zip(no_iteration_history, name_history):
+        if v is not None:
+            values.append(v)
+            labels.append(name)
+
     plt.figure()
-    plt.bar(range(len(integral_error_results_mpc_tuning)), integral_error_results_mpc_tuning)
-    plt.xticks(range(len(names_mpc_tuning)), names_mpc_tuning, rotation=90)
-    plt.ylabel("Perfformance index (lower is better)")
-    plt.title("MPC tuning comparison")
+    plt.bar(range(len(values)), values)
+    plt.xticks(range(len(labels)), labels, rotation=90)
+    plt.ylabel("Synthesis iterations")
+    plt.title("")
     plt.tight_layout()
     plt.show(block=False)
 
+
+    print(f"Synthesis time = {onp.nanmean(time_synthesis_issat)} +- {onp.nanstd(time_synthesis_issat)}")
+
+
+    '''
 
     # Time analysis
     plt.figure(dpi=300)
